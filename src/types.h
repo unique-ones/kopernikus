@@ -28,10 +28,10 @@ typedef double f64;
 #define STACK_ARRAY_SIZE(stack_array) (sizeof stack_array / sizeof stack_array[0])
 
 #define ASSERT(x, ...)               \
-	if (!(x)) {                      \
-		fprintf(stderr, __VA_ARGS__);\
-		abort();                     \
-	}
+    if (!(x)) {                      \
+        fprintf(stderr, __VA_ARGS__);\
+        abort();                     \
+    }
 
 
 #endif //TYPES_H

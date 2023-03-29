@@ -11,7 +11,7 @@
 
 #include <imnodes/imnodes.h>
 
-void render_create_context(Display* display);
+void render_create_context(Display *display);
 void render_destroy_context();
 
 void render_begin_frame();

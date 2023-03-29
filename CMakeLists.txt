@@ -15,7 +15,12 @@ add_executable(kopernikus
         "src/display.h"
         "src/display.cpp"
 		"src/render.h"
-		"src/render.cpp")
+		"src/render.cpp"
+		"src/object.h"
+		"src/planet.h"
+		"src/planet.cpp"
+		"src/math.h"
+		"src/math.cpp")
 
 target_include_directories(kopernikus PUBLIC "extern/")
 target_link_libraries(kopernikus PUBLIC "glfw" "ImGui" "glad" "imnodes")

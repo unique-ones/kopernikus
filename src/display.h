@@ -8,11 +8,11 @@
 #include <GLFW/glfw3.h>
 
 struct Display {
-	GLFWwindow* handle;
-	s32 width;
-	s32 height;
-	bool running;
-	f64 time;
+    GLFWwindow *handle;
+    s32 width;
+    s32 height;
+    bool running;
+    f64 time;
 };
 
 /**
@@ -21,15 +21,16 @@ struct Display {
  * @param title Title of the window
  * @return success indication
 */
-b32 display_create(Display* display, const char* title);
+b32 display_create(Display *display, const char *title);
 
 /**
  * Destroys the specified window
  * @param display Display handle
 */
-void display_destroy(Display* display);
+void display_destroy(Display *display);
 
-f64 display_update(Display* display);
-b32 display_running(Display* display);
+f64 display_update(Display *display);
+
+b32 display_running(Display *display);
 
 #endif //DISPLAY_H
