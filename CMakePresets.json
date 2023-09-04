@@ -30,6 +30,22 @@
       }
     },
     {
+      "name": "win",
+      "hidden": true,
+      "inherits": [
+        "default"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "TARGET_BUILD_PLATFORM": "win32"
+      }
+    },
+    {
       "name": "lin",
       "hidden": true,
       "inherits": [
@@ -41,9 +57,23 @@
         "rhs": "Linux"
       },
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_C_COMPILER": "clang",
         "TARGET_BUILD_PLATFORM": "linux"
       }
+    },
+    {
+      "name": "win-64-debug",
+      "inherits": [
+        "win",
+        "debug"
+      ]
+    },
+    {
+      "name": "win-64-release",
+      "inherits": [
+        "win",
+        "release"
+      ]
     },
     {
       "name": "lin-64-debug",
@@ -67,13 +97,23 @@
       "jobs": 16
     },
     {
-      "name": "lin-64-app",
+      "name": "win-64-kop",
+      "configurePreset": "win-64-debug",
+      "inherits": [
+        "default"
+      ],
+      "targets": [
+        "kopernikus"
+      ]
+    },
+    {
+      "name": "lin-64-kop",
       "configurePreset": "lin-64-debug",
       "inherits": [
         "default"
       ],
       "targets": [
-        "basic"
+        "kopernikus"
       ]
     }
   ]
