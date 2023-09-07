@@ -33,7 +33,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add subprojects
 add_subdirectory(libcore)
+add_subdirectory(libascom)
 
 add_executable(${PROJECT_NAME} "kopernikus.c")
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC "libcore")
+target_link_libraries(${PROJECT_NAME} PUBLIC "libcore" "libascom")
