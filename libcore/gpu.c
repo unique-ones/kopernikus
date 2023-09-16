@@ -25,6 +25,7 @@
 
 #include "gpu.h"
 #include "log.h"
+#include "string.h"
 
 // ===================================================================================
 // SHADER
@@ -34,7 +35,7 @@
 static u32 shader_compile(const char* source, u32 type) {
     u32 program = glCreateShader(type);
     const GLchar* shader_source = source;
-    glShaderSource(program, 1, &shader_source, NULL);
+    glShaderSource(program, 1, &shader_source, nil);
     glCompileShader(program);
 
     s32 success;
@@ -43,7 +44,7 @@ static u32 shader_compile(const char* source, u32 type) {
         s32 info_length;
         glGetShaderiv(program, GL_INFO_LOG_LENGTH, &info_length);
 
-        BinaryBuffer failure_info;
+        StringBuffer failure_info;
         failure_info.data = (char*) malloc((size_t) info_length);
         failure_info.size = (u32) info_length;
         glGetShaderInfoLog(program, info_length, &info_length, failure_info.data);
@@ -72,10 +73,10 @@ b8 shader_create(Shader* self, const char* vertex, const char* fragment) {
         s32 info_length;
         glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &info_length);
 
-        BinaryBuffer failure_info;
+        StringBuffer failure_info;
         failure_info.data = (char*) malloc((size_t) info_length);
         failure_info.size = (u32) info_length;
-        glGetProgramInfoLog(handle, info_length, NULL, failure_info.data);
+        glGetProgramInfoLog(handle, info_length, nil, failure_info.data);
         glDeleteProgram(handle);
         glDeleteProgram(vertex_program);
         glDeleteProgram(fragment_program);
@@ -92,7 +93,7 @@ b8 shader_create(Shader* self, const char* vertex, const char* fragment) {
     glGetProgramiv(handle, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_length);
 
     if (uniform_count > 0 && uniform_length > 0) {
-        BinaryBuffer uniform_name;
+        StringBuffer uniform_name;
         uniform_name.data = (char*) malloc(uniform_length);
         uniform_name.size = (u32) uniform_length;
 
@@ -268,7 +269,7 @@ static s32 vertex_buffer_layout_stride(VertexBufferLayout* layout) {
 /// Creates a vertex buffer on the gpu
 void vertex_buffer_create(VertexBuffer* self) {
     self->handle = 0;
-    self->layout = NULL;
+    self->layout = nil;
     glGenBuffers(1, &self->handle);
     glBindBuffer(GL_ARRAY_BUFFER, self->handle);
 }
@@ -276,7 +277,7 @@ void vertex_buffer_create(VertexBuffer* self) {
 /// Destroys the vertex buffer
 void vertex_buffer_destroy(VertexBuffer* self) {
     glDeleteBuffers(1, &self->handle);
-    self->layout = NULL;
+    self->layout = nil;
 }
 
 /// Sets the data for the specified buffer
@@ -341,8 +342,8 @@ void index_buffer_unbind() {
 /// Creates a new vertex array
 void vertex_array_create(VertexArray* self) {
     self->handle = 0;
-    self->vertex_buffer = NULL;
-    self->index_buffer = NULL;
+    self->vertex_buffer = nil;
+    self->index_buffer = nil;
     glGenVertexArrays(1, &self->handle);
     glBindVertexArray(self->handle);
 }

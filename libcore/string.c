@@ -21,56 +21,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#include <assert.h>
+#include <string.h>
 
-#include <glad/glad.h>
-#include <libsolaris/types.h>
+#include <libcore/string.h>
 
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
+/// Creates a nil String
+String string_nil() {
+    return (String){ .base = nil, .length = 0 };
+}
 
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
-
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
-
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
-
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
-
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-#endif// CORE_TYPES_H
+/// Creates a new string instance
+String string_new(MemoryArena* arena, const char* data, ssize length) {
+    String result = { .base = (char*) memory_arena_alloc(arena, length), .length = length };
+    memcpy(result.base, data, length);
+    return result;
+}

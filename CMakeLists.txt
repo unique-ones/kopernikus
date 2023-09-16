@@ -23,9 +23,8 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-# Mandelbrot project definition
+# Kopernikus project definition
 project(kopernikus VERSION 0.0.1 DESCRIPTION "kopernikus" LANGUAGES C)
-include(FetchContent)
 
 # Set the C standard
 set(CMAKE_C_STANDARD 17)

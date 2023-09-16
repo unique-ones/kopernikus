@@ -21,56 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#ifndef KOPERNIKUS_UTILITY_STRING_H
+#define KOPERNIKUS_UTILITY_STRING_H
 
-#include <glad/glad.h>
-#include <libsolaris/types.h>
+#include <libsolaris/utility/string.h>
 
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
+typedef struct StringBuffer {
+    char* data;
+    ssize size;
+} StringBuffer;
 
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
+typedef struct String {
+    char* base;
+    ssize length;
+} String;
 
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
+/// Creates a nil String
+String string_nil();
 
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
+/// Creates a new String instance
+/// @param arena The arena for the allocation
+/// @param data The string data
+/// @param length The length of the string
+/// @return String instance
+///
+/// @note Strings are heap allocated, which is the reason
+///       why an arena is necessary. For views to constant
+///       strings see StringView
+String string_new(MemoryArena* arena, const char* data, ssize length);
 
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
-
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-#endif// CORE_TYPES_H
+#endif// KOPERNIKUS_UTILITY_STRING_H

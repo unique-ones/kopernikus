@@ -27,7 +27,7 @@
 #include "display.h"
 
 /// Internal singleton instance
-static Display* instance = NULL;
+static Display* instance = nil;
 
 /// Framebuffer resize callback
 static void display_framebuffer_callback(GLFWwindow *handle, s32 width, s32 height) {
@@ -82,7 +82,7 @@ b8 display_create(Display*self, const char *title, u32 width, u32 height) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    self->handle = glfwCreateWindow((int) width, (int) height, title, NULL, NULL);
+    self->handle = glfwCreateWindow((int) width, (int) height, title, nil, nil);
     self->running = true;
     self->width = width;
     self->height = height;
@@ -103,7 +103,7 @@ b8 display_create(Display*self, const char *title, u32 width, u32 height) {
     glfwSetWindowUserPointer(self->handle, self);
     glfwSetFramebufferSizeCallback(self->handle, display_framebuffer_callback);
     glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(display_error_callback, NULL);
+    glDebugMessageCallback(display_error_callback, nil);
 
     instance = self;
     return true;
@@ -113,7 +113,7 @@ b8 display_create(Display*self, const char *title, u32 width, u32 height) {
 void display_destroy(Display*self) {
     glfwDestroyWindow(self->handle);
     glfwTerminate();
-    instance = NULL;
+    instance = nil;
 }
 
 /// Swaps front and back buffer, polls for events
