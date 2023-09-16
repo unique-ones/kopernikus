@@ -24,4 +24,33 @@
 #ifndef ASCOM_HTTP_CLIENT_H
 #define ASCOM_HTTP_CLIENT_H
 
+#include <libcore/string.h>
+
+typedef enum HttpResponseCode {
+    HTTP_OK = 200,
+    HTTP_BAD_REQUEST = 400,
+    HTTP_NOT_FOUND = 404,
+} HttpResponseCode;
+
+typedef struct HttpResponse {
+    String body;
+    String header;
+    HttpResponseCode code;
+} HttpResponse;
+
+/// Performs a HTTP GET request and retrieves the response
+/// @param response The HTTP response (text and code)
+/// @param arena The arena for allocating the response string
+/// @param client The client which holds the handle
+/// @param url The HTTP url for the request
+b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url);
+
+/// Performs a HTTP PUT request and retrieves the response
+/// @param response The HTTP response (text and code)
+/// @param arena The arena for allocating the response string
+/// @param client The client which holds the handle
+/// @param url The HTTP url for the request
+/// @param data The data to send
+b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, StringView* data);
+
 #endif// ASCOM_HTTP_CLIENT_H
