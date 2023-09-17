@@ -22,9 +22,9 @@
 #  SOFTWARE.
 
 include(FetchContent)
-FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git)
 FetchContent_Declare(solaris GIT_REPOSITORY https://github.com/koepla/solaris.git GIT_TAG "origin/main")
-FetchContent_MakeAvailable(glfw solaris)
+FetchContent_Declare(cimgui GIT_REPOSITORY https://github.com/koepla/cimgui.git GIT_TAG "origin/main")
+FetchContent_MakeAvailable(solaris cimgui)
 
 file(GLOB CORE_SOURCE_LIST
         ${CMAKE_CURRENT_LIST_DIR}/*.c
@@ -32,4 +32,5 @@ file(GLOB CORE_SOURCE_LIST
 
 add_library(libcore ${CORE_SOURCE_LIST} "${CMAKE_SOURCE_DIR}/extern/glad/glad.h" "${CMAKE_SOURCE_DIR}/extern/glad/glad.c")
 target_include_directories(libcore PUBLIC ${CMAKE_SOURCE_DIR}/extern/ ${CMAKE_SOURCE_DIR})
-target_link_libraries(libcore PUBLIC "glfw" "solaris")
+target_link_libraries(libcore PUBLIC "solaris" "cimgui")
+target_compile_definitions(libcore PUBLIC CIMGUI_DEFINE_ENUMS_AND_STRUCTS)
