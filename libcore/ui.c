@@ -26,7 +26,47 @@
 #include <cimgui.h>
 #include <cimgui_impl.h>
 
+/// Internal ID for the ImGui DockSpace
 static const char* UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
+
+/// Font mapping
+typedef struct FontMap {
+    ImFont* light;
+    ImFont* regular;
+    ImFont* semi_bold;
+    ImFont* bold;
+    ImFont* italic;
+} FontMap;
+
+/// Internal Font mapping structure
+static FontMap UI_FONT_MAP;
+
+/// Retrieves the font by style
+static ImFont* ui_font_by_style(FontStyle style) {
+    switch (style) {
+        case LIGHT:
+            return UI_FONT_MAP.light;
+        case REGULAR:
+            return UI_FONT_MAP.regular;
+        case SEMI_BOLD:
+            return UI_FONT_MAP.semi_bold;
+        case BOLD:
+            return UI_FONT_MAP.bold;
+        case ITALIC:
+            return UI_FONT_MAP.italic;
+    }
+}
+
+static void ui_setup_fonts() {
+    ImGuiIO* io = igGetIO();
+    const f32 font_size = 15.0f;
+    UI_FONT_MAP.light = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/CaskaydiaCoveNerdFontMono-Light.ttf", font_size, nil, nil);
+    UI_FONT_MAP.regular = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/CaskaydiaCoveNerdFontMono-Regular.ttf", font_size, nil, nil);
+    UI_FONT_MAP.semi_bold = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/CaskaydiaCoveNerdFontMono-SemiBold.ttf", font_size, nil, nil);
+    UI_FONT_MAP.bold = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/CaskaydiaCoveNerdFontMono-Bold.ttf", font_size, nil, nil);
+    UI_FONT_MAP.italic = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/CaskaydiaCoveNerdFontMono-Italic.ttf", font_size, nil, nil);
+    io->FontDefault = UI_FONT_MAP.regular;
+}
 
 /// Initializes the ui
 void ui_initialize(Display* display) {
@@ -35,6 +75,8 @@ void ui_initialize(Display* display) {
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ui_setup_fonts();
 
     ImGui_ImplGlfw_InitForOpenGL(display->handle, true);
     ImGui_ImplOpenGL3_Init("#version 450");

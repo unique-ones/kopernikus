@@ -26,6 +26,14 @@
 
 #include "display.h"
 
+typedef enum FontStyle {
+    LIGHT,
+    REGULAR,
+    SEMI_BOLD,
+    BOLD,
+    ITALIC
+} FontStyle;
+
 /// Initializes the ui context
 /// @param display
 void ui_initialize(Display* display);
