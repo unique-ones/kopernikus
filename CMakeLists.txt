@@ -37,3 +37,6 @@ add_subdirectory(libascom)
 add_executable(${PROJECT_NAME} "kopernikus.c")
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC "libcore" "libascom")
+
+# Copy Assets to the Output Directory
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/data DESTINATION ${CMAKE_INSTALL_PREFIX})
