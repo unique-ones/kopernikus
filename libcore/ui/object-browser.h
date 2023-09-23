@@ -21,30 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_UI_H
-#define CORE_UI_H
+#ifndef CORE_UI_OBJECT_BROWSER_H
+#define CORE_UI_OBJECT_BROWSER_H
 
-#include "display.h"
+#include <libsolaris/ephemeris/catalog.h>
 
-typedef enum FontStyle {
-    LIGHT,
-    REGULAR,
-    SEMI_BOLD,
-    BOLD,
-    ITALIC
-} FontStyle;
+typedef address ObjectEntry;
 
-/// Initializes the ui context
-/// @param display
-void ui_initialize(Display* display);
+typedef struct ObjectBrowser {
+    Catalog catalog;
+    ObjectEntry selected;
+} ObjectBrowser;
 
-/// Destroys the ui context
-void ui_destroy(void);
+/// Create a new ObjectBrowser
+/// @param browser The browser
+void object_browser_make(ObjectBrowser* browser);
 
-/// Begins a new ui draw pass
-void ui_begin(void);
+/// Render the ObjectBrowser
+/// @param browser The browser
+void object_browser_render(ObjectBrowser* browser);
 
-/// Ends the current ui draw pass
-void ui_end(void);
-
-#endif// CORE_UI_H
+#endif// CORE_UI_OBJECT_BROWSER_H
