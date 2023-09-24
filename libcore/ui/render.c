@@ -28,6 +28,7 @@
 #include <cimgui_impl.h>
 
 #include <float.h>
+#include <string.h>
 
 /// Internal ID for the ImGui DockSpace
 static const char* UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
@@ -57,6 +58,9 @@ static void ui_setup_style() {
     style->Colors[ImGuiCol_WindowBg] = (ImVec4){ 0.1f, 0.1f, 0.13f, 1.0f };
     style->Colors[ImGuiCol_MenuBarBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
 
+    // Child
+    style->Colors[ImGuiCol_ChildBg] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+
     // Border
     style->Colors[ImGuiCol_Border] = (ImVec4){ 0.44f, 0.37f, 0.61f, 0.29f };
     style->Colors[ImGuiCol_BorderShadow] = (ImVec4){ 0.0f, 0.0f, 0.0f, 0.24f };
@@ -64,6 +68,7 @@ static void ui_setup_style() {
     // Text
     style->Colors[ImGuiCol_Text] = (ImVec4){ 1.0f, 1.0f, 1.0f, 1.0f };
     style->Colors[ImGuiCol_TextDisabled] = (ImVec4){ 0.5f, 0.5f, 0.5f, 1.0f };
+    style->Colors[ImGuiCol_TextSelectedBg] = (ImVec4){ 0.90f, 0.44f, 0.89f, 1.0f };
 
     // Headers
     style->Colors[ImGuiCol_Header] = (ImVec4){ 0.13f, 0.13f, 0.17f, 1.0f };
@@ -199,18 +204,121 @@ void ui_window_end() {
     igEnd();
 }
 
+/// Begin the main menu
+b8 ui_main_menu_begin() {
+    return igBeginMainMenuBar();
+}
+
+/// End the main menu
+void ui_main_menu_end() {
+    igEndMainMenuBar();
+}
+
+/// Begin a menu
+b8 ui_menu_begin(const char* label) {
+    return igBeginMenu(label, true);
+}
+
+/// End the menu
+void ui_menu_end() {
+    igEndMenu();
+}
+
+/// Draw a menu item
+b8 ui_menu_item(const char* title, const char* shortcut) {
+    return igMenuItem_Bool(title, shortcut, false, true);
+}
+
+/// Draws text
+void ui_text(const char* fmt, ...) {
+    va_list list;
+    va_start(list, fmt);
+    igTextV(fmt, list);
+    va_end(list);
+}
+
+/// Draws wrapped text
+void ui_text_wrapped(const char* fmt, ...) {
+    va_list list;
+    va_start(list, fmt);
+    igTextWrappedV(fmt, list);
+    va_end(list);
+}
+
+/// Draw a note text
+void ui_note(const char* fmt, ...) {
+    va_list list;
+    va_start(list, fmt);
+    igBeginDisabled(true);
+    igTextWrappedV(fmt, list);
+    igEndDisabled();
+    va_end(list);
+}
+
+/// Draws a tooltip
+void ui_tooltip(const char* fmt, ...) {
+    igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
+    igBeginTooltip();
+    va_list list;
+    va_start(list, fmt);
+    igBeginDisabled(true);
+    igTextWrappedV(fmt, list);
+    igEndDisabled();
+    va_end(list);
+    igEndTooltip();
+}
+
+/// Draws a tooltip whenever the last item is hovered
+void ui_tooltip_hovered(const char* fmt, ...) {
+    if (ui_hovered()) {
+        igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
+        igBeginTooltip();
+        va_list list;
+        va_start(list, fmt);
+        igBeginDisabled(true);
+        igTextWrappedV(fmt, list);
+        igEndDisabled();
+        va_end(list);
+        igEndTooltip();
+    }
+}
+
+/// Draw a separator
+void ui_separator() {
+    igSeparator();
+}
+
+/// Draw a readonly text property
+void ui_property_text_readonly(const char* property, const char* text) {
+    igInputText(property, (char*) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
+}
+
+/// Draw a readonly text property
+void ui_property_number_readonly(const char* property, s64 x, const char* fmt) {
+    igInputScalar(property, ImGuiDataType_S64, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);
+}
+
+/// Draw a readonly real property
+void ui_property_real_readonly(const char* property, f64 x, const char* fmt) {
+    igInputScalar(property, ImGuiDataType_Double, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);
+}
+
 /// Draws an icon at the end of the current line
 static void ui_icon_end_of_line(const char* icon) {
     ImVec2 size;
     igGetContentRegionAvail(&size);
     igSameLine(size.x - igGetStyle()->FramePadding.x, -1.0f);
-    igText("%s", icon);
+    ui_text("%s", icon);
 }
 
 /// Draws a tree node with an optional icon
-b8 ui_tree_node_begin(const char* label, const char* icon) {
+b8 ui_tree_node_begin(const char* label, const char* icon, b8 selected) {
+    ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_DefaultOpen;
+    if (selected) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
     ImGuiID id = igGetID_Str(label);
-    b8 open = igTreeNodeBehavior(id, ImGuiTreeNodeFlags_AllowOverlap, label, nil);
+    b8 open = igTreeNodeBehavior(id, flags, label, nil);
     if (icon != nil) {
         ui_icon_end_of_line(icon);
     }
@@ -223,9 +331,33 @@ void ui_tree_node_end() {
 }
 
 /// Draws a tree node item with an optional icon
-void ui_tree_item(const char* label, const char* icon) {
-    igText("%s %s", ICON_FA_ARROWS_TO_CIRCLE, label);
+b8 ui_tree_item(const char* label, const char* icon, b8 selected) {
+    ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_Bullet;
+    if (selected) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+        igPushStyleColor_Vec4(ImGuiCol_Text, igGetStyle()->Colors[ImGuiCol_TextSelectedBg]);
+    }
+    ImGuiID id = igGetID_Str(label);
+    if (igTreeNodeBehavior(id, flags, label, nil)) {
+        igTreePop();
+    }
+    b8 clicked = ui_selected();
     if (icon != nil) {
         ui_icon_end_of_line(icon);
     }
+    if (selected) {
+        igPopStyleColor(1);
+    }
+    return clicked;
 }
+
+/// Checks if the last ui item is selected
+b8 ui_selected(void) {
+    return igIsItemClicked(ImGuiMouseButton_Left);
+}
+
+/// Checks if the last ui item is hovered
+b8 ui_hovered(void) {
+    return igIsItemHovered(ImGuiHoveredFlags_None);
+}
+

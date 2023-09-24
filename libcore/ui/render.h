@@ -30,24 +30,24 @@
 // Generic UI functions
 // ===================================================================================
 
-/// Initializes the ui context
+/// Initialize the ui context
 /// @param display
 void ui_initialize(Display* display);
 
-/// Destroys the ui context
+/// Destroy the ui context
 void ui_destroy(void);
 
-/// Begins a new ui draw pass
+/// Begin a new ui draw pass
 void ui_begin(void);
 
-/// Ends the current ui draw pass
+/// End the current ui draw pass
 void ui_end(void);
 
 // ===================================================================================
-// UI Widgets
+// UI window
 // ===================================================================================
 
-/// Begins a new UI window
+/// Begin a new UI window
 /// @param label Label of the window
 /// @return Boolean that indicates whether the window is open
 b8 ui_window_begin(const char* label);
@@ -55,18 +55,119 @@ b8 ui_window_begin(const char* label);
 /// Ends the current window
 void ui_window_end(void);
 
-/// Draws a tree node with an optional icon
+// ===================================================================================
+// UI menu
+// ===================================================================================
+
+/// Begin the main menu
+/// @return Open state of the main menu
+b8 ui_main_menu_begin(void);
+
+/// End the main menu
+void ui_main_menu_end(void);
+
+/// Begin a menu
+/// @param label Label of the menu
+/// @return Open state of the menu
+b8 ui_menu_begin(const char* label);
+
+/// End the menu
+void ui_menu_end(void);
+
+/// Draw a menu item
+/// @param title The title of the menu item
+/// @param shortcut The keyboard shortcut for the menu item
+/// @return Open state of the menu item
+b8 ui_menu_item(const char* title, const char* shortcut);
+
+// ===================================================================================
+// UI text
+// ===================================================================================
+
+/// Draw text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_text(const char* fmt, ...);
+
+/// Draw wrapped text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_text_wrapped(const char* fmt, ...);
+
+/// Draw a note text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_note(const char* fmt, ...);
+
+// ===================================================================================
+// UI misc
+// ===================================================================================
+
+/// Draws a tooltip
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_tooltip(const char* fmt, ...);
+
+/// Draws a tooltip whenever the last item is hovered
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_tooltip_hovered(const char* fmt, ...);
+
+/// Draw a separator
+void ui_separator(void);
+
+// ===================================================================================
+// UI property
+// ===================================================================================
+
+/// Draw a readonly text property
+/// @param property The property
+/// @param text The text
+void ui_property_text_readonly(const char* property, const char* text);
+
+/// Draw a readonly number property
+/// @param property The property
+/// @param x The number
+/// @param fmt The format
+void ui_property_number_readonly(const char* property, s64 x, const char* fmt);
+
+/// Draw a readonly real property
+/// @param property The property
+/// @param x The real
+/// @param fmt The format
+void ui_property_real_readonly(const char* property, f64 x, const char* fmt);
+
+// ===================================================================================
+// UI tree
+// ===================================================================================
+
+/// Draw a tree node with an optional icon
 /// @param label The label of the tree node
 /// @param icon Icon at end of tree node (optional)
+/// @param selected The tree node is selected
 /// @return Boolean that indicates whether the tree node is open
-b8 ui_tree_node_begin(const char* label, const char* icon);
+b8 ui_tree_node_begin(const char* label, const char* icon, b8 selected);
 
-/// Ends the current tree node
+/// End the current tree node
 void ui_tree_node_end(void);
 
 /// Draws a tree node item with an optional icon
 /// @param label The label of the item
 /// @param icon Icon at the end of tree node item (optional)
-void ui_tree_item(const char* label, const char* icon);
+/// @param selected Draw the item as selected
+/// @return Boolean if the item is clicked
+b8 ui_tree_item(const char* label, const char* icon, b8 selected);
+
+// ===================================================================================
+// UI state
+// ===================================================================================
+
+/// Check if the last ui item is selected
+/// @return Selection state
+b8 ui_selected(void);
+
+/// Checks if the last ui item is hovered
+/// @return Hovered state
+b8 ui_hovered(void);
 
 #endif// CORE_UI_RENDER_H

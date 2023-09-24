@@ -26,7 +26,14 @@
 
 #include <libsolaris/ephemeris/catalog.h>
 
-typedef address ObjectEntry;
+typedef struct ObjectEntry {
+    Classification classification;
+    ssize tree_index;
+    union {
+        FixedObject* object;
+        Planet* planet;
+    };
+} ObjectEntry;
 
 typedef struct ObjectBrowser {
     Catalog catalog;
