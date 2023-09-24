@@ -18,6 +18,9 @@ int main() {
 
         if (igBeginMainMenuBar()) {
             if (igBeginMenu(ICON_FA_HOUSE " Home", true)) {
+                if (igMenuItem_Bool("Exit", "ALT + F4", false, true)) {
+                    display_exit(&display);
+                }
                 igEndMenu();
             }
             if (igBeginMenu(ICON_FA_EYE " View", true)) {

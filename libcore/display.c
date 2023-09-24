@@ -131,6 +131,11 @@ b8 display_running(Display*self) {
     return self->running && !glfwWindowShouldClose(self->handle);
 }
 
+/// Tells the display that it should no longer be running
+void display_exit(Display* self) {
+    self->running = false;
+}
+
 /// Retrieves the current display instance
 Display* display_instance() {
     return instance;

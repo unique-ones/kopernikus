@@ -58,6 +58,10 @@ f64 display_update_frame(Display* self);
 /// @return
 b8 display_running(Display* self);
 
+/// Tells the display that it should no longer be running
+/// @param self Display handle
+void display_exit(Display* self);
+
 /// Retrieves the current display instance
 /// @return display instance
 Display* display_instance();
