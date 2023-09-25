@@ -21,14 +21,18 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-cmake_minimum_required(VERSION 3.22)
+include(FetchContent)
+FetchContent_Declare(solaris GIT_REPOSITORY https://github.com/koepla/solaris.git GIT_TAG "origin/main")
+FetchContent_Declare(cimgui GIT_REPOSITORY https://github.com/koepla/cimgui.git GIT_TAG "origin/main")
+FetchContent_MakeAvailable(solaris cimgui)
 
-# Kopernikus project definition
-project(kopernikus VERSION 0.0.1 DESCRIPTION "kopernikus" LANGUAGES C)
+file(GLOB CORE_SOURCE_LIST
+        ${CMAKE_CURRENT_LIST_DIR}/*.c
+        ${CMAKE_CURRENT_LIST_DIR}/*.h
+        ${CMAKE_CURRENT_LIST_DIR}/ui/*.c
+        ${CMAKE_CURRENT_LIST_DIR}/ui/*.h)
 
-# Set the C standard
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Add source
-add_subdirectory(src)
+add_library(libcore ${CORE_SOURCE_LIST} "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.h" "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.c")
+target_include_directories(libcore PUBLIC "${CMAKE_SOURCE_DIR}/src/extern/" "${CMAKE_SOURCE_DIR}/src/")
+target_link_libraries(libcore PUBLIC "solaris" "cimgui")
+target_compile_definitions(libcore PUBLIC CIMGUI_DEFINE_ENUMS_AND_STRUCTS)

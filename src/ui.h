@@ -21,8 +21,184 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_UI_ICON_H
-#define CORE_UI_ICON_H
+#ifndef KOPERNIKUS_UI_H
+#define KOPERNIKUS_UI_H
+
+#include <libcore/display.h>
+#include <libcore/string.h>
+
+// ===================================================================================
+// Generic UI functions
+// ===================================================================================
+
+/// Initialize the ui context
+/// @param display
+void ui_initialize(Display* display);
+
+/// Destroy the ui context
+void ui_destroy(void);
+
+/// Begin a new ui draw pass
+void ui_begin(void);
+
+/// End the current ui draw pass
+void ui_end(void);
+
+// ===================================================================================
+// UI window
+// ===================================================================================
+
+/// Begin a new UI window
+/// @param label Label of the window
+/// @param open Controls whether the window is open or not
+/// @return Boolean that indicates whether the window is open
+///
+/// @note One must not call window_end when this function returns false. The corresponding
+///       end call is performed automatically.
+b8 ui_window_begin(const char* label, b8* open);
+
+/// Ends the current window
+void ui_window_end(void);
+
+// ===================================================================================
+// UI menu
+// ===================================================================================
+
+/// Begin the main menu
+/// @return Open state of the main menu
+b8 ui_main_menu_begin(void);
+
+/// End the main menu
+void ui_main_menu_end(void);
+
+/// Begin a menu
+/// @param label Label of the menu
+/// @return Open state of the menu
+b8 ui_menu_begin(const char* label);
+
+/// End the menu
+void ui_menu_end(void);
+
+/// Draw a menu item
+/// @param title The title of the menu item
+/// @param shortcut The keyboard shortcut for the menu item
+/// @return Open state of the menu item
+b8 ui_menu_item(const char* title, const char* shortcut);
+
+// ===================================================================================
+// UI text
+// ===================================================================================
+
+/// Draw text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_text(const char* fmt, ...);
+
+/// Draw wrapped text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_text_wrapped(const char* fmt, ...);
+
+/// Draw a note text
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_note(const char* fmt, ...);
+
+// ===================================================================================
+// UI misc
+// ===================================================================================
+
+/// Draws a tooltip
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_tooltip(const char* fmt, ...);
+
+/// Draws a tooltip whenever the last item is hovered
+/// @param fmt Format string
+/// @param ... Variadic arguments
+void ui_tooltip_hovered(const char* fmt, ...);
+
+/// Draw a separator
+void ui_separator(void);
+
+/// Draw a selectable item
+/// @param label The label
+/// @param icon Icon at end of the line
+/// @return Selection state
+b8 ui_selectable(const char* label, const char* icon);
+
+// ===================================================================================
+// UI property
+// ===================================================================================
+
+/// Draw a readonly text property
+/// @param property The property
+/// @param text The text
+void ui_property_text_readonly(const char* property, const char* text);
+
+/// Draw a readonly number property
+/// @param property The property
+/// @param x The number
+/// @param fmt The format
+void ui_property_number_readonly(const char* property, s64 x, const char* fmt);
+
+/// Draw a readonly real property
+/// @param property The property
+/// @param x The real
+/// @param fmt The format
+void ui_property_real_readonly(const char* property, f64 x, const char* fmt);
+
+/// Draw a searchbar
+/// @param buffer The search buffer
+/// @param label The label
+/// @param placeholder The placeholder
+/// @return Boolean that indicates input
+b8 ui_searchbar(StringBuffer* buffer, const char* label, const char* placeholder);
+
+// ===================================================================================
+// UI tree
+// ===================================================================================
+
+/// Draw a tree node with an optional icon
+/// @param label The label of the tree node
+/// @param icon Icon at end of tree node (optional)
+/// @param selected The tree node is selected
+/// @return Boolean that indicates whether the tree node is open
+b8 ui_tree_node_begin(const char* label, const char* icon, b8 selected);
+
+/// End the current tree node
+void ui_tree_node_end(void);
+
+/// Draws a tree node item with an optional icon
+/// @param label The label of the item
+/// @param icon Icon at the end of tree node item (optional)
+/// @param selected Draw the item as selected
+/// @return Boolean if the item is clicked
+b8 ui_tree_item(const char* label, const char* icon, b8 selected);
+
+// ===================================================================================
+// UI state
+// ===================================================================================
+
+/// Check if the last ui item is selected
+/// @return Selection state
+b8 ui_selected(void);
+
+/// Check if the left mouse button is clicked
+/// @return Click state
+b8 ui_click_left(void);
+
+/// Check if the right mouse button is clicked
+/// @return Click state
+b8 ui_click_right(void);
+
+/// Checks if the last ui item is hovered
+/// @return Hovered state
+b8 ui_hovered(void);
+
+// ===================================================================================
+// UI icons
+// ===================================================================================
 
 #define ICON_MIN_FA 0xe005
 #define ICON_MAX_16_FA 0xf8ff
@@ -1418,4 +1594,4 @@
 #define ICON_FA_YIN_YANG "\xef\x9a\xad"	// U+f6ad
 #define ICON_FA_Z "Z"	// U+005a
 
-#endif// CORE_UI_ICON_H
+#endif// KOPERNIKUS_UI_H

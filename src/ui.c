@@ -21,18 +21,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "icons.h"
-#include "render.h"
+#include "ui.h"
 
 #include <cimgui.h>
 #include <cimgui_impl.h>
+
+#include <cimnodes.h>
+#include <cimplot.h>
 
 #include <float.h>
 #include <string.h>
 
 /// Internal ID for the ImGui DockSpace
 static const char* UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
-
 
 static void ui_setup_style() {
     ImGuiIO* io = igGetIO();
@@ -48,7 +49,7 @@ static void ui_setup_style() {
     icons.MergeMode = true;
     icons.PixelSnapH = true;
 
-    f32 font_size = 15.0f;
+    f32 font_size = 16.0f;
     f32 font_size_icons = 2.0f / 3.0f * font_size;
     io->FontDefault = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/caskaydia-cove.ttf", font_size, nil, nil);
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-regular-400.ttf", font_size_icons, &icons, icons_ranges);
@@ -59,7 +60,7 @@ static void ui_setup_style() {
     style->Colors[ImGuiCol_MenuBarBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Child
-    style->Colors[ImGuiCol_ChildBg] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_ChildBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Border
     style->Colors[ImGuiCol_Border] = (ImVec4){ 0.44f, 0.37f, 0.61f, 0.29f };
@@ -135,6 +136,9 @@ static void ui_setup_style() {
 /// Initializes the ui
 void ui_initialize(Display* display) {
     igCreateContext(nil);
+    imnodes_CreateContext();
+    ImPlot_CreateContext();
+
     ImGuiIO* io = igGetIO();
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -150,6 +154,8 @@ void ui_initialize(Display* display) {
 void ui_destroy() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot_DestroyContext(nil);
+    imnodes_DestroyContext(nil);
     igDestroyContext(nil);
 }
 
@@ -195,8 +201,16 @@ void ui_end() {
 }
 
 /// Begins a new UI window
-b8 ui_window_begin(const char* label) {
-    return igBegin(label, nil, ImGuiWindowFlags_None);
+b8 ui_window_begin(const char* label, b8* open) {
+    if (open != nil && !*open) {
+        return false;
+    }
+
+    b8 result = igBegin(label, (bool*) open, ImGuiWindowFlags_None);
+    if (!result) {
+        igEnd();
+    }
+    return result;
 }
 
 /// Ends the current window
@@ -288,6 +302,23 @@ void ui_separator() {
     igSeparator();
 }
 
+/// Draws an icon at the end of the current line
+static void ui_icon_end_of_line(const char* icon) {
+    ImVec2 size;
+    igGetContentRegionAvail(&size);
+    igSameLine(size.x - igGetStyle()->FramePadding.x, -1.0f);
+    ui_text("%s", icon);
+}
+
+/// Draw a selectable item
+b8 ui_selectable(const char* label, const char* icon) {
+    b8 selected = igSelectable_Bool(label, false, ImGuiSelectableFlags_None, (ImVec2){ 0.0f, 0.0f });
+    if (icon) {
+        ui_icon_end_of_line(icon);
+    }
+    return selected;
+}
+
 /// Draw a readonly text property
 void ui_property_text_readonly(const char* property, const char* text) {
     igInputText(property, (char*) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
@@ -303,12 +334,11 @@ void ui_property_real_readonly(const char* property, f64 x, const char* fmt) {
     igInputScalar(property, ImGuiDataType_Double, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);
 }
 
-/// Draws an icon at the end of the current line
-static void ui_icon_end_of_line(const char* icon) {
-    ImVec2 size;
-    igGetContentRegionAvail(&size);
-    igSameLine(size.x - igGetStyle()->FramePadding.x, -1.0f);
-    ui_text("%s", icon);
+/// Draw a searchbar
+b8 ui_searchbar(StringBuffer* buffer, const char* label, const char* placeholder) {
+    ImVec2 available;
+    igGetContentRegionAvail(&available);
+    return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size,(ImVec2){ available.x, 0.0f }, ImGuiInputTextFlags_None, nil, nil);
 }
 
 /// Draws a tree node with an optional icon
@@ -356,8 +386,17 @@ b8 ui_selected(void) {
     return igIsItemClicked(ImGuiMouseButton_Left);
 }
 
+/// Check if the left mouse button is clicked
+b8 ui_click_left() {
+    return igIsMouseClicked_Bool(ImGuiMouseButton_Left, false);
+}
+
+/// Check if the right mouse button is clicked
+b8 ui_click_right() {
+    return igIsMouseClicked_Bool(ImGuiMouseButton_Right, false);
+}
+
 /// Checks if the last ui item is hovered
 b8 ui_hovered(void) {
     return igIsItemHovered(ImGuiHoveredFlags_None);
 }
-

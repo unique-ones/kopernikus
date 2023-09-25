@@ -21,14 +21,16 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
-cmake_minimum_required(VERSION 3.22)
+# Add subprojects
+add_subdirectory(libcore)
+add_subdirectory(libascom)
 
-# Kopernikus project definition
-project(kopernikus VERSION 0.0.1 DESCRIPTION "kopernikus" LANGUAGES C)
+file(GLOB KOPERNIKUS_SOURCE_LIST
+        ${CMAKE_CURRENT_LIST_DIR}/*.c)
 
-# Set the C standard
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_executable(${PROJECT_NAME} ${KOPERNIKUS_SOURCE_LIST})
+target_include_directories(${PROJECT_NAME} PRIVATE .)
+target_link_libraries(${PROJECT_NAME} PRIVATE "libcore" "libascom")
 
-# Add source
-add_subdirectory(src)
+# Copy Assets to the Output Directory
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/data DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -22,11 +22,13 @@
 // SOFTWARE.
 
 
-#include "object-browser.h"
-#include "icons.h"
-#include "render.h"
+#include "browser.h"
+#include "ui.h"
 
+#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
+#include <libcore/log.h>
 
 /// Create a new ObjectBrowser
 void object_browser_make(ObjectBrowser* browser) {
@@ -36,12 +38,22 @@ void object_browser_make(ObjectBrowser* browser) {
         .tree_index = -1,
         .object = nil,
     };
+    memset(browser->search_buffer, 0, sizeof browser->search_buffer);
+    browser->show_browser = true;
+    browser->show_properties = true;
 }
-
 
 /// Render the tree view of the ObjectBrowser
 static void object_browser_render_tree(ObjectBrowser* browser) {
-    ui_window_begin("Object Browser");
+    if (!ui_window_begin("Object Browser", &browser->show_browser)) {
+        return;
+    }
+
+    StringBuffer buffer = { browser->search_buffer, sizeof browser->search_buffer };
+    ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...");
+
+    // Check how many bytes are typed into the search bar
+    usize search_fill = strlen(buffer.data);
 
     // We need to keep track of selected objects, for which we will
     // use this tree index
@@ -50,12 +62,23 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
     // Planet tree
     if (ui_tree_node_begin(ICON_FA_EARTH_EUROPE " Planets", nil, false)) {
         for (usize i = 0; i < browser->catalog.planet_count; ++i) {
-            // Check if the current planet is selected
-            b8 selected = browser->selected.tree_index == tree_index;
-
             // Fetch the planet from the browser catalog
             Planet* planet = browser->catalog.planets + i;
-            if (ui_tree_item(planet_string(planet->name), ICON_FA_FLASK, selected)) {
+            const char* name = planet_string(planet->name);
+
+            // Check if search matches
+            StringView view_name = string_view_from_native(name);
+            StringView view_search = string_view_new(buffer.data, (ssize) search_fill);
+            if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
+                // If the search does not match, do not draw, however, we still need
+                // to increment the tree index to keep track of entries
+                tree_index += 1;
+                continue;
+            }
+
+            // Check if the current planet is selected
+            b8 selected = browser->selected.tree_index == tree_index;
+            if (ui_tree_item(name, ICON_FA_FLASK, selected)) {
                 browser->selected.tree_index = tree_index;
                 browser->selected.classification = CLASSIFICATION_PLANET;
                 browser->selected.planet = planet;
@@ -76,6 +99,16 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
 
             char object_name[128] = { 0 };
             sprintf(object_name, "%llu (%s)", object->designation.index, catalog_string(object->designation.catalog));
+
+            // Check if search matches
+            StringView view_name = string_view_from_native(object_name);
+            StringView view_search = string_view_new(buffer.data, (ssize) search_fill);
+            if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
+                // If the search does not match, do not draw, however, we still need
+                // to increment the tree index to keep track of entries
+                tree_index += 1;
+                continue;
+            }
 
             if (ui_tree_item(object_name, ICON_FA_FLASK, selected)) {
                 browser->selected.tree_index = tree_index;
@@ -195,7 +228,9 @@ static void object_browser_render_properties_object(FixedObject* object) {
 
 /// Render the properties of the selected entry
 static void object_browser_render_properties(ObjectBrowser* browser) {
-    ui_window_begin("Object Properties");
+    if (!ui_window_begin("Object Properties", &browser->show_properties)) {
+        return;
+    }
 
     // Check if no object is selected, early out if that is the case
     if (browser->selected.tree_index == -1) {

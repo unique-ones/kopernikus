@@ -21,31 +21,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_UI_OBJECT_BROWSER_H
-#define CORE_UI_OBJECT_BROWSER_H
+#include <stdarg.h>
+#include <time.h>
 
-#include <libsolaris/ephemeris/catalog.h>
+#include "log.h"
 
-typedef struct ObjectEntry {
-    Classification classification;
-    ssize tree_index;
-    union {
-        FixedObject* object;
-        Planet* planet;
-    };
-} ObjectEntry;
+void flogf(FILE* file, const char* message, ...) {
+    // log time information
+    time_t now = time(0);
+    struct tm* time_info = localtime(&now);
+    fprintf(file, "[%02d:%02d:%02d] ", time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
 
-typedef struct ObjectBrowser {
-    Catalog catalog;
-    ObjectEntry selected;
-} ObjectBrowser;
-
-/// Create a new ObjectBrowser
-/// @param browser The browser
-void object_browser_make(ObjectBrowser* browser);
-
-/// Render the ObjectBrowser
-/// @param browser The browser
-void object_browser_render(ObjectBrowser* browser);
-
-#endif// CORE_UI_OBJECT_BROWSER_H
+    va_list list;
+    va_start(list, message);
+    vfprintf(file, message, list);
+    va_end(list);
+}

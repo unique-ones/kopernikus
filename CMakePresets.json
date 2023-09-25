@@ -30,6 +30,15 @@
       }
     },
     {
+      "name": "deploy",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE": "${sourceDir}/build/${presetName}"
+      }
+    },
+    {
       "name": "win",
       "hidden": true,
       "inherits": [
@@ -76,6 +85,13 @@
       ]
     },
     {
+      "name": "win-64-deploy",
+      "inherits": [
+        "win",
+        "deploy"
+      ]
+    },
+    {
       "name": "lin-64-debug",
       "inherits": [
         "lin",
@@ -88,6 +104,13 @@
         "lin",
         "release"
       ]
+    },
+    {
+      "name": "lin-64-deploy",
+      "inherits": [
+        "lin",
+        "deploy"
+      ]
     }
   ],
   "buildPresets": [
@@ -97,7 +120,7 @@
       "jobs": 16
     },
     {
-      "name": "win-64-kop",
+      "name": "win-64-kop-debug",
       "configurePreset": "win-64-debug",
       "inherits": [
         "default"
@@ -107,8 +130,48 @@
       ]
     },
     {
-      "name": "lin-64-kop",
+      "name": "win-64-kop-release",
+      "configurePreset": "win-64-release",
+      "inherits": [
+        "default"
+      ],
+      "targets": [
+        "kopernikus"
+      ]
+    },
+    {
+      "name": "win-64-kop-deploy",
+      "configurePreset": "win-64-deploy",
+      "inherits": [
+        "default"
+      ],
+      "targets": [
+        "kopernikus"
+      ]
+    },
+    {
+      "name": "lin-64-kop-debug",
       "configurePreset": "lin-64-debug",
+      "inherits": [
+        "default"
+      ],
+      "targets": [
+        "kopernikus"
+      ]
+    },
+    {
+      "name": "lin-64-kop-release",
+      "configurePreset": "lin-64-release",
+      "inherits": [
+        "default"
+      ],
+      "targets": [
+        "kopernikus"
+      ]
+    },
+    {
+      "name": "lin-64-kop-deploy",
+      "configurePreset": "lin-64-deploy",
       "inherits": [
         "default"
       ],
