@@ -32,5 +32,10 @@ add_executable(${PROJECT_NAME} ${KOPERNIKUS_SOURCE_LIST})
 target_include_directories(${PROJECT_NAME} PRIVATE .)
 target_link_libraries(${PROJECT_NAME} PRIVATE "libcore" "libascom")
 
+# we want to use unsecure functions ;)
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1)
+endif()
+
 # Copy Assets to the Output Directory
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/data DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -23,20 +23,22 @@
 
 #include <libcore/display.h>
 #include <libcore/log.h>
+#include <libascom/http/client.h>
 
 #include "browser.h"
 #include "sequencer.h"
 #include "ui.h"
 
 int main() {
-    Display display;
-    display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1280, 720);
+
+    Display display = { 0 };
+    display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);
 
-    ObjectBrowser browser;
+    ObjectBrowser browser = { 0 };
     object_browser_make(&browser);
 
-    Sequencer sequencer;
+    Sequencer sequencer = { 0 };
     sequencer_make(&sequencer);
 
     while (display_running(&display)) {

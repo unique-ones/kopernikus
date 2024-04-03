@@ -32,6 +32,11 @@ typedef enum HttpResponseCode {
     HTTP_NOT_FOUND = 404,
 } HttpResponseCode;
 
+/// Retrieves a string representation of the specified HTTP response code
+/// @param code The HTTP response code
+/// @return String representation of the response code
+const char* http_response_code_to_string(HttpResponseCode code);
+
 typedef struct HttpResponse {
     String body;
     String header;
@@ -41,14 +46,12 @@ typedef struct HttpResponse {
 /// Performs a HTTP GET request and retrieves the response
 /// @param response The HTTP response (text and code)
 /// @param arena The arena for allocating the response string
-/// @param client The client which holds the handle
 /// @param url The HTTP url for the request
 b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url);
 
 /// Performs a HTTP PUT request and retrieves the response
 /// @param response The HTTP response (text and code)
 /// @param arena The arena for allocating the response string
-/// @param client The client which holds the handle
 /// @param url The HTTP url for the request
 /// @param data The data to send
 b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, StringView* data);

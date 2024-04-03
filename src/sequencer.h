@@ -30,8 +30,10 @@
 
 typedef enum SequenceNodeType { SEQUENCE_NODE_TRACK, SEQUENCE_NODE_WAIT } SequenceNodeType;
 
-/// Forward declare Sequencer
+/// Forward declare Sequencer types
+typedef struct Sequencer Sequencer;
 typedef struct SequenceNode SequenceNode;
+typedef struct SequenceLink SequenceLink;
 
 typedef struct SequenceNode {
     /// The previous node in the sequence
@@ -53,31 +55,62 @@ typedef struct SequenceNode {
     u64 id;
 } SequenceNode;
 
-/// Forward declare Sequencer
-typedef struct Sequencer Sequencer;
 
 /// Create a new track sequence node
 /// @param sequencer The sequencer handle
 /// @param entry The object entry
 /// @param duration The sequence duration
-/// @return A track sequence node that lives inside the arena
+/// @return A track sequence node that lives inside the sequencer arena
 SequenceNode* sequence_node_make_track(Sequencer* sequencer, ObjectEntry* entry, Duration duration);
 
 /// Create a new wait sequence node
 /// @param sequencer The sequencer handle
 /// @param duration The sequence duration
-/// @return A wait sequence node that lives inside the arena
+/// @return A wait sequence node that lives inside the sequencer arena
 SequenceNode* sequence_node_make_wait(Sequencer* sequencer, Duration duration);
 
-typedef struct Sequencer {
-    /// Start of the sequence
-    SequenceNode* head;
+typedef struct SequenceLink {
+    /// The previous link in the sequence
+    SequenceLink* previous;
 
-    /// End of the sequence
-    SequenceNode* tail;
+    /// The next link in the sequence
+    SequenceLink* next;
+
+    /// The origin ID, which resembles the ID of the origin node where the link starts
+    u64 origin_id;
+
+    /// The target ID, which resembles the ID of the target node where the link points to
+    u64 target_id;
+
+    /// The id of the link itself
+    u64 id;
+} SequenceLink;
+
+/// Create a new link instance
+/// @param sequencer The sequencer handle
+/// @param origin_id The ID of the origin node
+/// @param target_id The ID of the target node
+/// @return A link that lives inside the sequencer arena
+SequenceLink* sequence_link_make(Sequencer* sequencer, u64 origin_id, u64 target_id);
+
+typedef struct Sequencer {
+    /// Start of the node sequence
+    SequenceNode* node_head;
+
+    /// End of the node sequence
+    SequenceNode* node_tail;
+
+    /// Start of the link sequence
+    SequenceLink* link_head;
+
+    /// End of the link sequence
+    SequenceLink* link_tail;
 
     /// Number of nodes
-    usize length;
+    usize node_count;
+
+    /// Number of links
+    usize link_count;
 
     /// Sequencer arena, this stores all the nodes in blocks
     MemoryArena arena;
@@ -101,10 +134,20 @@ void sequencer_destroy(Sequencer* sequencer);
 /// @param sequencer The sequencer handle
 void sequencer_clear(Sequencer* sequencer);
 
-/// Emplace a node into the sequencer
+/// Emplace a node into the sequencer node list
 /// @param sequencer The sequencer handle
 /// @param node The sequence node
-void sequencer_emplace(Sequencer* sequencer, SequenceNode* node);
+void sequencer_emplace_node(Sequencer* sequencer, SequenceNode* node);
+
+/// Emplace a link into the sequencer link list
+/// @param sequencer The sequencer handle
+/// @param link The sequence link
+void sequencer_emplace_link(Sequencer* sequencer, SequenceLink* link);
+
+/// Remove a link by its ID
+/// @param sequencer The sequencer handle
+/// @param link_id The id of the sequence link
+void sequencer_remove_link(Sequencer* sequencer, u64 link_id);
 
 /// Draw the sequencer
 /// @param sequencer The sequencer handle

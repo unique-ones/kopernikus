@@ -21,18 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
-#include "browser.h"
-#include "ui.h"
+#include <solaris/arena.h>
+#include <solaris/globe.h>
 
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <libcore/input.h>
 #include <libcore/log.h>
+
+#include "browser.h"
+#include "solaris/math.h"
+#include "ui.h"
+
+#include <cimgui.h>
+#include <cimplot.h>
+
 
 /// Create a new ObjectBrowser
 void object_browser_make(ObjectBrowser* browser) {
     browser->catalog = catalog_acquire();
+    browser->arena = memory_arena_identity(ALIGNMENT8);
+    browser->globe_tree = globe_tree_make_root(&browser->arena);
     browser->selected = (ObjectEntry){
         .classification = CLASSIFICATION_COUNT,
         .tree_index = -1,
@@ -41,6 +52,43 @@ void object_browser_make(ObjectBrowser* browser) {
     memset(browser->search_buffer, 0, sizeof browser->search_buffer);
     browser->show_browser = true;
     browser->show_properties = true;
+
+    usize object_count = browser->catalog.object_count;
+    browser->heatmap.right_ascensions = (f64*) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
+    browser->heatmap.declinations = (f64*) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
+
+    for (usize i = 0; i < browser->catalog.object_count; ++i) {
+        Object* object = browser->catalog.objects + i;
+        browser->heatmap.right_ascensions[i] = object->position.right_ascension;
+        browser->heatmap.declinations[i] = object->position.declination;
+    }
+}
+
+/// Destroys the ObjectBrowser
+void object_browser_destroy(ObjectBrowser* browser) {
+    memory_arena_destroy(&browser->arena);
+}
+
+/// Render the catalog map
+static void render_catalog_map(ObjectBrowser* browser, bool fill_region) {
+    ImVec2 region = { 0 };
+    igGetContentRegionAvail(&region);
+    if (!fill_region) {
+        region.y = region.x / 2;
+    }
+
+    static ImPlotRect selection = { { 0.0, 360.0 }, { -90.0, 90.0 } };
+
+    ImPlot_PushColormap_PlotColormap(ImPlotColormap_Plasma);
+    if (ImPlot_BeginPlot("##Region", region, 0)) {
+        ImPlot_SetupAxes(nil, nil, ImPlotAxisFlags_Foreground, ImPlotAxisFlags_Foreground);
+        ImPlot_PlotHistogram2D_doublePtr("Object Density", browser->heatmap.right_ascensions,
+                                         browser->heatmap.declinations, (int) browser->catalog.object_count, 100,
+                                         100 * region.y / region.x, selection, ImPlotHistogramFlags_Density);
+        ImPlot_GetPlotLimits(&selection, -1, -1);
+        ImPlot_EndPlot();
+    }
+    ImPlot_PopColormap(1);
 }
 
 /// Render the tree view of the ObjectBrowser
@@ -49,77 +97,83 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
         return;
     }
 
-    StringBuffer buffer = { browser->search_buffer, sizeof browser->search_buffer };
-    ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...");
-
-    // Check how many bytes are typed into the search bar
-    usize search_fill = strlen(buffer.data);
-
-    // We need to keep track of selected objects, for which we will
-    // use this tree index
-    ssize tree_index = 0;
-
-    // Planet tree
-    if (ui_tree_node_begin(ICON_FA_EARTH_EUROPE " Planets", nil, false)) {
-        for (usize i = 0; i < browser->catalog.planet_count; ++i) {
-            // Fetch the planet from the browser catalog
-            Planet* planet = browser->catalog.planets + i;
-            const char* name = planet_string(planet->name);
-
-            // Check if search matches
-            StringView view_name = string_view_from_native(name);
-            StringView view_search = string_view_new(buffer.data, (ssize) search_fill);
-            if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
-                // If the search does not match, do not draw, however, we still need
-                // to increment the tree index to keep track of entries
-                tree_index += 1;
-                continue;
-            }
-
-            // Check if the current planet is selected
-            b8 selected = browser->selected.tree_index == tree_index;
-            if (ui_tree_item(name, ICON_FA_FLASK, selected)) {
-                browser->selected.tree_index = tree_index;
-                browser->selected.classification = CLASSIFICATION_PLANET;
-                browser->selected.planet = planet;
-            }
-            tree_index += 1;
-        }
-        ui_tree_node_end();
+    if (igCollapsingHeader_BoolPtr("Catalog Map", nil, ImGuiTreeNodeFlags_DefaultOpen)) {
+        render_catalog_map(browser, false);
     }
 
-    // Object tree
-    if (ui_tree_node_begin(ICON_FA_STAR " Objects", nil, false)) {
-        for (usize i = 0; i < browser->catalog.object_count; ++i) {
-            // Check if the current planet is selected
-            b8 selected = browser->selected.tree_index == tree_index;
+    if (igCollapsingHeader_BoolPtr("Objects", nil, ImGuiTreeNodeFlags_DefaultOpen)) {
+        StringBuffer buffer = { browser->search_buffer, sizeof browser->search_buffer };
+        ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...");
 
-            // Fetch the object from the browser catalog
-            FixedObject* object = browser->catalog.objects + i;
+        // Check how many bytes are typed into the search bar
+        usize search_fill = strlen(buffer.data);
 
-            char object_name[128] = { 0 };
-            sprintf(object_name, "%llu (%s)", object->designation.index, catalog_string(object->designation.catalog));
+        // We need to keep track of selected objects, for which we will
+        // use this tree index
+        ssize tree_index = 0;
 
-            // Check if search matches
-            StringView view_name = string_view_from_native(object_name);
-            StringView view_search = string_view_new(buffer.data, (ssize) search_fill);
-            if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
-                // If the search does not match, do not draw, however, we still need
-                // to increment the tree index to keep track of entries
+        // Planet tree
+        if (ui_tree_node_begin(ICON_FA_EARTH_EUROPE " Planets", nil, false)) {
+            for (usize i = 0; i < browser->catalog.planet_count; ++i) {
+                // Fetch the planet from the browser catalog
+                Planet* planet = browser->catalog.planets + i;
+                const char* name = planet_string(planet->name);
+
+                // Check if search matches
+                StringView view_name = string_view_from_native(name);
+                StringView view_search = string_view_make(buffer.data, (ssize) search_fill);
+                if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
+                    // If the search does not match, do not draw, however, we still need
+                    // to increment the tree index to keep track of entries
+                    tree_index += 1;
+                    continue;
+                }
+
+                // Check if the current planet is selected
+                b8 selected = browser->selected.tree_index == tree_index;
+                if (ui_tree_item(name, ICON_FA_FLASK, selected)) {
+                    browser->selected.tree_index = tree_index;
+                    browser->selected.classification = CLASSIFICATION_PLANET;
+                    browser->selected.planet = planet;
+                }
                 tree_index += 1;
-                continue;
             }
-
-            if (ui_tree_item(object_name, ICON_FA_FLASK, selected)) {
-                browser->selected.tree_index = tree_index;
-                browser->selected.classification = object->classification;
-                browser->selected.object = object;
-            }
-            tree_index += 1;
+            ui_tree_node_end();
         }
-        ui_tree_node_end();
-    }
 
+        // Object tree
+        if (ui_tree_node_begin(ICON_FA_STAR " Objects", nil, false)) {
+            for (usize i = 0; i < browser->catalog.object_count; ++i) {
+                // Check if the current planet is selected
+                b8 selected = browser->selected.tree_index == tree_index;
+
+                // Fetch the object from the browser catalog
+                Object* object = browser->catalog.objects + i;
+
+                char object_name[128] = { 0 };
+                sprintf(object_name, "%llu (%s)", object->designation.index,
+                        catalog_string(object->designation.catalog));
+
+                // Check if search matches
+                StringView view_name = string_view_from_native(object_name);
+                StringView view_search = string_view_make(buffer.data, (ssize) search_fill);
+                if (search_fill > 0 && !string_view_contains(&view_name, &view_search)) {
+                    // If the search does not match, do not draw, however, we still need
+                    // to increment the tree index to keep track of entries
+                    tree_index += 1;
+                    continue;
+                }
+
+                if (ui_tree_item(object_name, ICON_FA_FLASK, selected)) {
+                    browser->selected.tree_index = tree_index;
+                    browser->selected.classification = object->classification;
+                    browser->selected.object = object;
+                }
+                tree_index += 1;
+            }
+            ui_tree_node_end();
+        }
+    }
     ui_window_end();
 }
 
@@ -128,7 +182,7 @@ static void object_browser_render_properties_planet(Planet* planet) {
         ui_note("Designation");
         ui_property_text_readonly("Name", planet_string(planet->name));
 
-        DateTime now = date_time_now();
+        Time now = time_now();
         Elements elements = planet_position_orbital(planet, &now);
         Equatorial position = planet_position_equatorial(planet, &now);
 
@@ -186,7 +240,7 @@ static void object_browser_render_properties_planet(Planet* planet) {
     }
 }
 
-static void object_browser_render_properties_object(FixedObject* object) {
+static void object_browser_render_properties_object(ObjectBrowser* browser, Object* object) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
         ui_note("Designation");
         ui_property_text_readonly("Catalog", catalog_string(object->designation.catalog));
@@ -194,8 +248,8 @@ static void object_browser_render_properties_object(FixedObject* object) {
         ui_property_text_readonly("Type", classification_string(object->classification));
         ui_property_text_readonly("Const", constellation_string(object->constellation));
 
-        DateTime now = date_time_now();
-        Equatorial position = fixed_object_position(object, &now);
+        Time now = time_now();
+        Equatorial position = object_position(object, &now);
 
         ui_note("Observation Data (now)");
         ui_property_real_readonly("Ra", position.right_ascension, "%f °");
@@ -242,7 +296,7 @@ static void object_browser_render_properties(ObjectBrowser* browser) {
     if (browser->selected.classification == CLASSIFICATION_PLANET) {
         object_browser_render_properties_planet(browser->selected.planet);
     } else {
-        object_browser_render_properties_object(browser->selected.object);
+        object_browser_render_properties_object(browser, browser->selected.object);
     }
 
     ui_window_end();

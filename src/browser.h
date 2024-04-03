@@ -24,7 +24,8 @@
 #ifndef CORE_UI_OBJECT_BROWSER_H
 #define CORE_UI_OBJECT_BROWSER_H
 
-#include <libsolaris/ephemeris/catalog.h>
+#include <solaris/catalog.h>
+#include "solaris/globe.h"
 
 typedef struct ObjectEntry {
     /// The classification is used to decide which type is stored here.
@@ -39,7 +40,7 @@ typedef struct ObjectEntry {
 
     /// Reference to the actual object/planet
     union {
-        FixedObject* object;
+        Object* object;
         Planet* planet;
     };
 } ObjectEntry;
@@ -47,6 +48,18 @@ typedef struct ObjectEntry {
 typedef struct ObjectBrowser {
     /// Catalog of solaris which internally stores all the objects
     Catalog catalog;
+
+    /// Memory arena for all ObjectBrowser allocations
+    MemoryArena arena;
+
+    /// GlobeTree for spatial acceleration
+    GlobeTree* globe_tree;
+
+    /// Heat map for displaying all the objects
+    struct {
+        f64* right_ascensions;
+        f64* declinations;
+    } heatmap;
 
     /// Selected object from the tree
     ObjectEntry selected;
@@ -64,6 +77,10 @@ typedef struct ObjectBrowser {
 /// Create a new ObjectBrowser
 /// @param browser The browser
 void object_browser_make(ObjectBrowser* browser);
+
+/// Destroys the ObjectBrowser
+/// @param browser The browser
+void object_browser_destroy(ObjectBrowser* browser);
 
 /// Render the ObjectBrowser
 /// @param browser The browser

@@ -196,6 +196,9 @@ b8 ui_click_right(void);
 /// @return Hovered state
 b8 ui_hovered(void);
 
+/// Keep the current line of the UI cursor
+void ui_keep_line(void);
+
 // ===================================================================================
 // UI icons
 // ===================================================================================

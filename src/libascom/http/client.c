@@ -26,8 +26,23 @@
 #include <libascom/http/client.h>
 #include <libcore/types.h>
 
-// CURL write function for the HttpClient
-static usize http_client_write(address content, usize size, usize member_size, StringBuffer* buffer) {
+/// Retrieves a string representation of the specified HTTP response code
+/// @param code The HTTP response code
+/// @return String representation of the response code
+const char* http_response_code_to_string(HttpResponseCode code) {
+    switch (code) {
+        case HTTP_OK:
+            return "OK";
+        case HTTP_BAD_REQUEST:
+            return "Bad Request";
+        case HTTP_NOT_FOUND:
+            return "Not Found";
+    }
+    return "";
+}
+
+/// CURL write function for the HttpClient
+static usize http_client_write(u8* content, usize size, usize member_size, StringBuffer* buffer) {
     usize curl_length = size * member_size;
     char* tmp = realloc(buffer->data, buffer->size + curl_length);
     ASSERT(tmp != nil, "[http] could not allocate write buffer!")
@@ -37,7 +52,8 @@ static usize http_client_write(address content, usize size, usize member_size, S
     return curl_length;
 }
 
-static usize http_client_read(address content, usize size, usize member_size, StringView* data) {
+/// CURL read function for the HttpClient
+static usize http_client_read(u8* content, usize size, usize member_size, StringView* data) {
     usize curl_length = size * member_size;
     usize length = (data->length < curl_length) ? data->length : curl_length;
     memcpy(content, data->data, length);
@@ -58,7 +74,7 @@ b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url) 
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_buffer);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body_buffer);
 
-    CURLcode  result = curl_easy_perform(curl);
+    CURLcode result = curl_easy_perform(curl);
     if (result != CURLE_OK) {
         free(header_buffer.data);
         free(body_buffer.data);

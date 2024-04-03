@@ -24,7 +24,7 @@
 #ifndef KOPERNIKUS_UTILITY_STRING_H
 #define KOPERNIKUS_UTILITY_STRING_H
 
-#include <libsolaris/utility/string.h>
+#include <solaris/string.h>
 
 typedef struct StringBuffer {
     char* data;
@@ -42,7 +42,6 @@ String string_nil();
 /// Creates a new String instance
 /// @param arena The arena for the allocation
 /// @param data The string data
-/// @param length The length of the string
 /// @return String instance
 ///
 /// @note Strings are heap allocated, which is the reason

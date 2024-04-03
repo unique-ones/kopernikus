@@ -9,7 +9,8 @@
     {
       "name": "default",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja"
     },
     {
       "name": "debug",
@@ -17,7 +18,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG": "${sourceDir}/build/${presetName}"
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG": "${sourceDir}/build/${presetName}",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -26,16 +28,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE": "${sourceDir}/build/${presetName}"
-      }
-    },
-    {
-      "name": "deploy",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}",
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE": "${sourceDir}/build/${presetName}"
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE": "${sourceDir}/build/${presetName}",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -51,6 +45,7 @@
       },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
         "TARGET_BUILD_PLATFORM": "win32"
       }
     },
@@ -67,6 +62,7 @@
       },
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
         "TARGET_BUILD_PLATFORM": "linux"
       }
     },
@@ -85,13 +81,6 @@
       ]
     },
     {
-      "name": "win-64-deploy",
-      "inherits": [
-        "win",
-        "deploy"
-      ]
-    },
-    {
       "name": "lin-64-debug",
       "inherits": [
         "lin",
@@ -104,13 +93,6 @@
         "lin",
         "release"
       ]
-    },
-    {
-      "name": "lin-64-deploy",
-      "inherits": [
-        "lin",
-        "deploy"
-      ]
     }
   ],
   "buildPresets": [
@@ -120,63 +102,31 @@
       "jobs": 16
     },
     {
-      "name": "win-64-kop-debug",
+      "name": "win-64-debug",
       "configurePreset": "win-64-debug",
       "inherits": [
         "default"
-      ],
-      "targets": [
-        "kopernikus"
       ]
     },
     {
-      "name": "win-64-kop-release",
+      "name": "win-64-release",
       "configurePreset": "win-64-release",
       "inherits": [
         "default"
-      ],
-      "targets": [
-        "kopernikus"
       ]
     },
     {
-      "name": "win-64-kop-deploy",
-      "configurePreset": "win-64-deploy",
-      "inherits": [
-        "default"
-      ],
-      "targets": [
-        "kopernikus"
-      ]
-    },
-    {
-      "name": "lin-64-kop-debug",
+      "name": "lin-64-debug",
       "configurePreset": "lin-64-debug",
       "inherits": [
         "default"
-      ],
-      "targets": [
-        "kopernikus"
       ]
     },
     {
-      "name": "lin-64-kop-release",
+      "name": "lin-64-release",
       "configurePreset": "lin-64-release",
       "inherits": [
         "default"
-      ],
-      "targets": [
-        "kopernikus"
-      ]
-    },
-    {
-      "name": "lin-64-kop-deploy",
-      "configurePreset": "lin-64-deploy",
-      "inherits": [
-        "default"
-      ],
-      "targets": [
-        "kopernikus"
       ]
     }
   ]

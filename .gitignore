@@ -1,5 +1,10 @@
-# Created by https://www.toptal.com/developers/gitignore/api/clion,cmake,c++
-# Edit at https://www.toptal.com/developers/gitignore?templates=clion,cmake,c++
+# Created by https://www.toptal.com/developers/gitignore/api/c++,cmake,clion
+# Edit at https://www.toptal.com/developers/gitignore?templates=c++,cmake,clion
+
+# Custom entries
+/build
+/.idea
+/.cache
 
 ### C++ ###
 # Prerequisites
@@ -40,7 +45,6 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
-.idea/
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
@@ -166,7 +170,4 @@ _deps
 # External projects
 *-prefix/
 
-# End of https://www.toptal.com/developers/gitignore/api/clion,cmake,c++
-
-# Custom
-build/
+# End of https://www.toptal.com/developers/gitignore/api/c++,cmake,clion

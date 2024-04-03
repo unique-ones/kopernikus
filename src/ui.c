@@ -32,8 +32,15 @@
 #include <float.h>
 #include <string.h>
 
+/// Macro for generating a ImU32 color
+/// #define IM_COL32_R_SHIFT    0
+#define UI_COLOR32(R, G, B, A)                                                                      \
+    (((ImU32) ((A) *255.0f) << 24) | ((ImU32) ((B) *255.0f) << 16) | ((ImU32) ((G) *255.0f) << 8) | \
+     ((ImU32) ((R) *255.0f) << 0))
+
 /// Internal ID for the ImGui DockSpace
 static const char* UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
+
 
 static void ui_setup_style() {
     ImGuiIO* io = igGetIO();
@@ -69,7 +76,7 @@ static void ui_setup_style() {
     // Text
     style->Colors[ImGuiCol_Text] = (ImVec4){ 1.0f, 1.0f, 1.0f, 1.0f };
     style->Colors[ImGuiCol_TextDisabled] = (ImVec4){ 0.5f, 0.5f, 0.5f, 1.0f };
-    style->Colors[ImGuiCol_TextSelectedBg] = (ImVec4){ 0.90f, 0.44f, 0.89f, 1.0f };
+    style->Colors[ImGuiCol_TextSelectedBg] = (ImVec4){ 1.0f, 1.0f, 0.0f, 1.0f };
 
     // Headers
     style->Colors[ImGuiCol_Header] = (ImVec4){ 0.13f, 0.13f, 0.17f, 1.0f };
@@ -131,6 +138,14 @@ static void ui_setup_style() {
     style->FrameRounding = 3;
     style->PopupRounding = 4;
     style->ChildRounding = 4;
+
+    ImNodesStyle* imNodesStyle = imnodes_GetStyle();
+    imNodesStyle->Colors[ImNodesCol_Link] = UI_COLOR32(0.8f, 0.8f, 0.0f, 1.0f);
+    imNodesStyle->Colors[ImNodesCol_LinkHovered] = UI_COLOR32(1.0f, 1.0f, 0.0f, 1.0f);
+    imNodesStyle->Colors[ImNodesCol_LinkSelected] = UI_COLOR32(0.9f, 0.9f, 0.0f, 1.0f);
+    imNodesStyle->Colors[ImNodesCol_TitleBar] = UI_COLOR32(0.55f, 0.0f, 0.75f, 1.0f);
+    imNodesStyle->Colors[ImNodesCol_TitleBarHovered] = UI_COLOR32(0.60f, 0.0f, 0.8f, 1.0f);
+    imNodesStyle->Colors[ImNodesCol_TitleBarSelected] = UI_COLOR32(0.57f, 0.0f, 0.77f, 1.0f);
 }
 
 /// Initializes the ui
@@ -338,7 +353,8 @@ void ui_property_real_readonly(const char* property, f64 x, const char* fmt) {
 b8 ui_searchbar(StringBuffer* buffer, const char* label, const char* placeholder) {
     ImVec2 available;
     igGetContentRegionAvail(&available);
-    return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size,(ImVec2){ available.x, 0.0f }, ImGuiInputTextFlags_None, nil, nil);
+    return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size, (ImVec2){ available.x, 0.0f },
+                         ImGuiInputTextFlags_None, nil, nil);
 }
 
 /// Draws a tree node with an optional icon
@@ -399,4 +415,9 @@ b8 ui_click_right() {
 /// Checks if the last ui item is hovered
 b8 ui_hovered(void) {
     return igIsItemHovered(ImGuiHoveredFlags_None);
+}
+
+/// Keep the current line of the UI cursor
+void ui_keep_line(void) {
+    igSameLine(0.0f, -1.0f);
 }

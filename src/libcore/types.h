@@ -25,9 +25,10 @@
 #define CORE_TYPES_H
 
 #include <glad/glad.h>
-#include <libsolaris/types.h>
+#include <solaris/types.h>
 
 typedef u64 Duration;
+typedef float f32;
 
 #define ASSERT(x, ...)                \
     if (!(x)) {                       \
