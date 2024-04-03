@@ -22,41 +22,45 @@
 // SOFTWARE.
 
 #include "sequencer.h"
+#include "browser.h"
+#include "cimgui.h"
+#include "solaris/object.h"
+#include "solaris/planet.h"
+#include "solaris/time.h"
 #include "ui.h"
 
+#include <cimnodes.h>
 #include <libcore/log.h>
 
-#include <cimnodes.h>
 
-static const char* SEQUENCE_NODE_POPUP_ID = "##CreateSequenceNode";
+static const char *SEQUENCE_NODE_POPUP_ID = "##CreateSequenceNode";
+static const char *SEQUENCE_NODE_MESSAGE_POPUP_ID = "##CreateSequenceNodeMessage";
 
 /// Create a new sequence node
-SequenceNode* sequence_node_make_track(Sequencer* sequencer, ObjectEntry* entry, Duration duration) {
-    SequenceNode* node = (SequenceNode*) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
+SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackData *data) {
+    SequenceNode *node = (SequenceNode *) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
     node->previous = nil;
     node->next = nil;
     node->type = SEQUENCE_NODE_TRACK;
-    node->object = *entry;
-    node->duration = duration;
+    node->track = *data;
     node->id = sequencer->node_count + 1;
     return node;
 }
 
 /// Create a new wait sequence node
-SequenceNode* sequence_node_make_wait(Sequencer* sequencer, Duration duration) {
-    SequenceNode* node = (SequenceNode*) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
+SequenceNode *sequence_node_make_wait(Sequencer *sequencer, SequenceNodeWaitData *data) {
+    SequenceNode *node = (SequenceNode *) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
     node->previous = nil;
     node->next = nil;
     node->type = SEQUENCE_NODE_WAIT;
-    node->object = (ObjectEntry){ .classification = CLASSIFICATION_COUNT, .tree_index = -1, .object = nil };
-    node->duration = duration;
+    node->wait = *data;
     node->id = sequencer->node_count + 1;
     return node;
 }
 
 /// Create a new link instance
-SequenceLink* sequence_link_make(Sequencer* sequencer, u64 origin_id, u64 target_id) {
-    SequenceLink* link = (SequenceLink*) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
+SequenceLink *sequence_link_make(Sequencer *sequencer, u64 origin_id, u64 target_id) {
+    SequenceLink *link = (SequenceLink *) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
     link->previous = nil;
     link->next = nil;
     link->origin_id = origin_id;
@@ -66,7 +70,7 @@ SequenceLink* sequence_link_make(Sequencer* sequencer, u64 origin_id, u64 target
 }
 
 /// Create a new sequencer
-void sequencer_make(Sequencer* sequencer) {
+void sequencer_make(Sequencer *sequencer, ObjectBrowser *browser) {
     sequencer->node_head = nil;
     sequencer->node_tail = nil;
     sequencer->node_count = 0;
@@ -76,10 +80,11 @@ void sequencer_make(Sequencer* sequencer) {
     sequencer->arena = memory_arena_identity(ALIGNMENT8);
     sequencer->show_editor = true;
     sequencer->show_timeline = true;
+    sequencer->browser = browser;
 }
 
 /// Destroy the sequencer
-void sequencer_destroy(Sequencer* sequencer) {
+void sequencer_destroy(Sequencer *sequencer) {
     // No need to traverse the list and free the nodes individually,
     // since all live inside the arena which we can free.
     sequencer->node_head = nil;
@@ -89,7 +94,7 @@ void sequencer_destroy(Sequencer* sequencer) {
 }
 
 /// Clear the sequencer
-void sequencer_clear(Sequencer* sequencer) {
+void sequencer_clear(Sequencer *sequencer) {
     sequencer->node_head = nil;
     sequencer->node_tail = nil;
     sequencer->node_count = 0;
@@ -98,7 +103,7 @@ void sequencer_clear(Sequencer* sequencer) {
 }
 
 /// Emplace a node into the sequencer
-void sequencer_emplace_node(Sequencer* sequencer, SequenceNode* node) {
+void sequencer_emplace_node(Sequencer *sequencer, SequenceNode *node) {
     if (sequencer->node_head == nil) {
         sequencer->node_head = node;
         sequencer->node_count++;
@@ -106,7 +111,7 @@ void sequencer_emplace_node(Sequencer* sequencer, SequenceNode* node) {
     }
 
     // Traverse all nodes
-    SequenceNode* it = sequencer->node_head;
+    SequenceNode *it = sequencer->node_head;
     for (; it->next != nil; it = it->next) { }
 
     it->next = node;
@@ -116,7 +121,7 @@ void sequencer_emplace_node(Sequencer* sequencer, SequenceNode* node) {
 }
 
 /// Emplace a link into the sequencer link list
-void sequencer_emplace_link(Sequencer* sequencer, SequenceLink* link) {
+void sequencer_emplace_link(Sequencer *sequencer, SequenceLink *link) {
     if (sequencer->link_head == nil) {
         sequencer->link_head = link;
         sequencer->link_count++;
@@ -124,7 +129,7 @@ void sequencer_emplace_link(Sequencer* sequencer, SequenceLink* link) {
     }
 
     /// Traverse all nodes
-    SequenceLink* it = sequencer->link_head;
+    SequenceLink *it = sequencer->link_head;
     for (; it->next != nil; it = it->next) { }
 
     it->next = link;
@@ -134,9 +139,9 @@ void sequencer_emplace_link(Sequencer* sequencer, SequenceLink* link) {
 }
 
 /// Remove a link by its ID
-void sequencer_remove_link(Sequencer* sequencer, u64 link_id) {
+void sequencer_remove_link(Sequencer *sequencer, u64 link_id) {
     // Traverse all nodes
-    SequenceLink* it = sequencer->link_head;
+    SequenceLink *it = sequencer->link_head;
     for (; it->next != nil; it = it->next) {
         // We basically unhook the node from the list,
         // but do not remove it since we allocate our
@@ -149,7 +154,7 @@ void sequencer_remove_link(Sequencer* sequencer, u64 link_id) {
 }
 
 /// Draw a wait node
-static void sequencer_render_node_wait(SequenceNode* node) {
+static void sequencer_render_node_wait(SequenceNode *node) {
     imnodes_BeginNodeTitleBar();
     ui_text(ICON_FA_CLOCK " Wait");
     imnodes_EndNodeTitleBar();
@@ -161,10 +166,14 @@ static void sequencer_render_node_wait(SequenceNode* node) {
     imnodes_BeginOutputAttribute((s32) node->id << 16, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
+
+    ui_item_width_begin(100.0f);
+    ui_property_real("Duration", &node->wait.duration, "%.4f");
+    ui_item_width_end();
 }
 
 /// Draw a track node
-static void sequencer_render_node_track(SequenceNode* node) {
+static void sequencer_render_node_track(SequenceNode *node) {
     imnodes_BeginNodeTitleBar();
     ui_text(ICON_FA_CROSSHAIRS " Track");
     imnodes_EndNodeTitleBar();
@@ -176,10 +185,25 @@ static void sequencer_render_node_track(SequenceNode* node) {
     imnodes_BeginOutputAttribute((s32) node->id << 16, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
+
+    ui_item_width_begin(100.0f);
+    ui_property_real("Duration", &node->track.duration, "%.4f");
+
+    ObjectEntry *entry = &node->track.object;
+    if (entry->classification == CLASSIFICATION_PLANET) {
+        ui_property_text_readonly("Object", planet_string(entry->planet->name));
+    } else {
+        Object *object = entry->object;
+
+        char object_name[128] = { 0 };
+        sprintf(object_name, "%llu (%s)", object->designation.index, catalog_string(object->designation.catalog));
+        ui_property_text_readonly("Object", object_name);
+    }
+    ui_item_width_end();
 }
 
 /// Draw a node
-static void sequencer_render_node(SequenceNode* node) {
+static void sequencer_render_node(SequenceNode *node) {
     imnodes_BeginNode((s32) node->id);
     switch (node->type) {
         case SEQUENCE_NODE_TRACK:
@@ -193,17 +217,17 @@ static void sequencer_render_node(SequenceNode* node) {
 }
 
 /// Draw all the nodes
-static void sequencer_render_nodes(Sequencer* sequencer) {
-    for (SequenceNode* it = sequencer->node_head; it != nil; it = it->next) {
+static void sequencer_render_nodes(Sequencer *sequencer) {
+    for (SequenceNode *it = sequencer->node_head; it != nil; it = it->next) {
         sequencer_render_node(it);
     }
-    for (SequenceLink* it = sequencer->link_head; it != nil; it = it->next) {
+    for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
         imnodes_Link((s32) it->id, (s32) it->origin_id, (s32) it->target_id);
     }
 }
 
 /// Draw the timeline
-static void sequencer_render_timeline(Sequencer* sequencer) {
+static void sequencer_render_timeline(Sequencer *sequencer) {
     if (!ui_window_begin("Sequence Timeline", &sequencer->show_timeline)) {
         return;
     }
@@ -211,13 +235,13 @@ static void sequencer_render_timeline(Sequencer* sequencer) {
 }
 
 /// Draw the editor
-static void sequencer_render_editor(Sequencer* sequencer) {
+static void sequencer_render_editor(Sequencer *sequencer) {
     if (!ui_window_begin("Sequence Editor", &sequencer->show_editor)) {
         return;
     }
-    
+
     // Unfortunately, we have to save window padding and frame padding as ImNodes changes it :(
-    ImGuiStyle* style = igGetStyle();
+    ImGuiStyle *style = igGetStyle();
     ImVec2 frame_padding = style->FramePadding;
     ImVec2 window_padding = style->WindowPadding;
 
@@ -232,12 +256,19 @@ static void sequencer_render_editor(Sequencer* sequencer) {
     igPushStyleVar_Vec2(ImGuiStyleVar_FramePadding, frame_padding);
     if (igBeginPopup(SEQUENCE_NODE_POPUP_ID, ImGuiWindowFlags_None)) {
         ui_note("Create Node");
-        SequenceNode* node = nil;
+        SequenceNode *node = nil;
         if (ui_selectable("Track", ICON_FA_CROSSHAIRS)) {
-            node = sequence_node_make_track(sequencer, &(ObjectEntry){ 0 }, 0);
+            if (sequencer->browser->selected.tree_index != -1) {
+                node = sequence_node_make_track(sequencer,
+                                                &(SequenceNodeTrackData){ .duration = 1,
+                                                                          .unit = UNIT_MINUTES,
+                                                                          .object = sequencer->browser->selected });
+            } else {
+                flogf(stderr, "[sequencer] Must select object in order to create a track node!");
+            }
         }
         if (ui_selectable("Wait", ICON_FA_CLOCK)) {
-            node = sequence_node_make_wait(sequencer, 0);
+            node = sequence_node_make_wait(sequencer, &(SequenceNodeWaitData){ .duration = 1, .unit = UNIT_MINUTES });
         }
         if (node != nil) {
             ImVec2 mouse_pos;
@@ -254,13 +285,15 @@ static void sequencer_render_editor(Sequencer* sequencer) {
         igPopStyleColor(1);
         igEndPopup();
     }
+
     igPopStyleVar(2);
+
     sequencer_render_nodes(sequencer);
     imnodes_EndNodeEditor();
 
     s32 origin_id, target_id;
     if (imnodes_IsLinkCreated_BoolPtr(&origin_id, &target_id, nil)) {
-        SequenceLink* link = sequence_link_make(sequencer, origin_id, target_id);
+        SequenceLink *link = sequence_link_make(sequencer, origin_id, target_id);
         sequencer_emplace_link(sequencer, link);
     }
 
@@ -273,7 +306,7 @@ static void sequencer_render_editor(Sequencer* sequencer) {
 }
 
 /// Draw the sequencer
-void sequencer_render(Sequencer* sequencer) {
+void sequencer_render(Sequencer *sequencer) {
     sequencer_render_editor(sequencer);
     sequencer_render_timeline(sequencer);
 }

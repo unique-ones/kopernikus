@@ -21,9 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <libascom/http/client.h>
 #include <libcore/display.h>
 #include <libcore/log.h>
-#include <libascom/http/client.h>
+
 
 #include "browser.h"
 #include "sequencer.h"
@@ -39,7 +40,7 @@ int main() {
     object_browser_make(&browser);
 
     Sequencer sequencer = { 0 };
-    sequencer_make(&sequencer);
+    sequencer_make(&sequencer, &browser);
 
     while (display_running(&display)) {
         ui_begin();

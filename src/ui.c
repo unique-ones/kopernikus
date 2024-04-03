@@ -39,11 +39,11 @@
      ((ImU32) ((R) *255.0f) << 0))
 
 /// Internal ID for the ImGui DockSpace
-static const char* UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
+static const char *UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
 
 
 static void ui_setup_style() {
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
 
     static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
     ImFontConfig icons = { 0 };
@@ -62,7 +62,7 @@ static void ui_setup_style() {
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-regular-400.ttf", font_size_icons, &icons, icons_ranges);
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-solid-900.ttf", font_size_icons, &icons, icons_ranges);
 
-    ImGuiStyle* style = igGetStyle();
+    ImGuiStyle *style = igGetStyle();
     style->Colors[ImGuiCol_WindowBg] = (ImVec4){ 0.1f, 0.1f, 0.13f, 1.0f };
     style->Colors[ImGuiCol_MenuBarBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
 
@@ -139,7 +139,7 @@ static void ui_setup_style() {
     style->PopupRounding = 4;
     style->ChildRounding = 4;
 
-    ImNodesStyle* imNodesStyle = imnodes_GetStyle();
+    ImNodesStyle *imNodesStyle = imnodes_GetStyle();
     imNodesStyle->Colors[ImNodesCol_Link] = UI_COLOR32(0.8f, 0.8f, 0.0f, 1.0f);
     imNodesStyle->Colors[ImNodesCol_LinkHovered] = UI_COLOR32(1.0f, 1.0f, 0.0f, 1.0f);
     imNodesStyle->Colors[ImNodesCol_LinkSelected] = UI_COLOR32(0.9f, 0.9f, 0.0f, 1.0f);
@@ -149,12 +149,12 @@ static void ui_setup_style() {
 }
 
 /// Initializes the ui
-void ui_initialize(Display* display) {
+void ui_initialize(Display *display) {
     igCreateContext(nil);
     imnodes_CreateContext();
     ImPlot_CreateContext();
 
-    ImGuiIO* io = igGetIO();
+    ImGuiIO *io = igGetIO();
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
@@ -180,7 +180,7 @@ void ui_begin() {
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
 
-    ImGuiViewport* viewport = igGetMainViewport();
+    ImGuiViewport *viewport = igGetMainViewport();
     igSetNextWindowPos(viewport->Pos, 0, (ImVec2){ 0.0f, 0.0f });
     igSetNextWindowSize(viewport->Size, 0);
     igPushStyleVar_Float(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -209,19 +209,19 @@ void ui_end() {
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 
-    GLFWwindow* backup_context = glfwGetCurrentContext();
+    GLFWwindow *backup_context = glfwGetCurrentContext();
     igUpdatePlatformWindows();
     igRenderPlatformWindowsDefault(nil, nil);
     glfwMakeContextCurrent(backup_context);
 }
 
 /// Begins a new UI window
-b8 ui_window_begin(const char* label, b8* open) {
+b8 ui_window_begin(const char *label, b8 *open) {
     if (open != nil && !*open) {
         return false;
     }
 
-    b8 result = igBegin(label, (bool*) open, ImGuiWindowFlags_None);
+    b8 result = igBegin(label, (bool *) open, ImGuiWindowFlags_None);
     if (!result) {
         igEnd();
     }
@@ -244,7 +244,7 @@ void ui_main_menu_end() {
 }
 
 /// Begin a menu
-b8 ui_menu_begin(const char* label) {
+b8 ui_menu_begin(const char *label) {
     return igBeginMenu(label, true);
 }
 
@@ -254,12 +254,12 @@ void ui_menu_end() {
 }
 
 /// Draw a menu item
-b8 ui_menu_item(const char* title, const char* shortcut) {
+b8 ui_menu_item(const char *title, const char *shortcut) {
     return igMenuItem_Bool(title, shortcut, false, true);
 }
 
 /// Draws text
-void ui_text(const char* fmt, ...) {
+void ui_text(const char *fmt, ...) {
     va_list list;
     va_start(list, fmt);
     igTextV(fmt, list);
@@ -267,7 +267,7 @@ void ui_text(const char* fmt, ...) {
 }
 
 /// Draws wrapped text
-void ui_text_wrapped(const char* fmt, ...) {
+void ui_text_wrapped(const char *fmt, ...) {
     va_list list;
     va_start(list, fmt);
     igTextWrappedV(fmt, list);
@@ -275,7 +275,7 @@ void ui_text_wrapped(const char* fmt, ...) {
 }
 
 /// Draw a note text
-void ui_note(const char* fmt, ...) {
+void ui_note(const char *fmt, ...) {
     va_list list;
     va_start(list, fmt);
     igBeginDisabled(true);
@@ -285,7 +285,7 @@ void ui_note(const char* fmt, ...) {
 }
 
 /// Draws a tooltip
-void ui_tooltip(const char* fmt, ...) {
+void ui_tooltip(const char *fmt, ...) {
     igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
     igBeginTooltip();
     va_list list;
@@ -298,7 +298,7 @@ void ui_tooltip(const char* fmt, ...) {
 }
 
 /// Draws a tooltip whenever the last item is hovered
-void ui_tooltip_hovered(const char* fmt, ...) {
+void ui_tooltip_hovered(const char *fmt, ...) {
     if (ui_hovered()) {
         igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
         igBeginTooltip();
@@ -318,7 +318,7 @@ void ui_separator() {
 }
 
 /// Draws an icon at the end of the current line
-static void ui_icon_end_of_line(const char* icon) {
+static void ui_icon_end_of_line(const char *icon) {
     ImVec2 size;
     igGetContentRegionAvail(&size);
     igSameLine(size.x - igGetStyle()->FramePadding.x, -1.0f);
@@ -326,7 +326,7 @@ static void ui_icon_end_of_line(const char* icon) {
 }
 
 /// Draw a selectable item
-b8 ui_selectable(const char* label, const char* icon) {
+b8 ui_selectable(const char *label, const char *icon) {
     b8 selected = igSelectable_Bool(label, false, ImGuiSelectableFlags_None, (ImVec2){ 0.0f, 0.0f });
     if (icon) {
         ui_icon_end_of_line(icon);
@@ -334,23 +334,38 @@ b8 ui_selectable(const char* label, const char* icon) {
     return selected;
 }
 
-/// Draw a readonly text property
-void ui_property_text_readonly(const char* property, const char* text) {
-    igInputText(property, (char*) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
+/// Begins setting the width of the next items
+void ui_item_width_begin(f32 width) {
+    igPushItemWidth(width);
+}
+
+/// Ends setting the width of the next items
+void ui_item_width_end() {
+    igPopItemWidth();
 }
 
 /// Draw a readonly text property
-void ui_property_number_readonly(const char* property, s64 x, const char* fmt) {
+void ui_property_text_readonly(const char *property, const char *text) {
+    igInputText(property, (char *) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
+}
+
+/// Draw a readonly text property
+void ui_property_number_readonly(const char *property, s64 x, const char *fmt) {
     igInputScalar(property, ImGuiDataType_S64, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);
 }
 
+/// Draw a real property
+b8 ui_property_real(const char *property, f64 *x, const char *fmt) {
+    return igInputScalar(property, ImGuiDataType_Double, x, nil, nil, fmt, ImGuiInputTextFlags_None);
+}
+
 /// Draw a readonly real property
-void ui_property_real_readonly(const char* property, f64 x, const char* fmt) {
+void ui_property_real_readonly(const char *property, f64 x, const char *fmt) {
     igInputScalar(property, ImGuiDataType_Double, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);
 }
 
 /// Draw a searchbar
-b8 ui_searchbar(StringBuffer* buffer, const char* label, const char* placeholder) {
+b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder) {
     ImVec2 available;
     igGetContentRegionAvail(&available);
     return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size, (ImVec2){ available.x, 0.0f },
@@ -358,7 +373,7 @@ b8 ui_searchbar(StringBuffer* buffer, const char* label, const char* placeholder
 }
 
 /// Draws a tree node with an optional icon
-b8 ui_tree_node_begin(const char* label, const char* icon, b8 selected) {
+b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected) {
     ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_DefaultOpen;
     if (selected) {
         flags |= ImGuiTreeNodeFlags_Selected;
@@ -377,7 +392,7 @@ void ui_tree_node_end() {
 }
 
 /// Draws a tree node item with an optional icon
-b8 ui_tree_item(const char* label, const char* icon, b8 selected) {
+b8 ui_tree_item(const char *label, const char *icon, b8 selected) {
     ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_Bullet;
     if (selected) {
         flags |= ImGuiTreeNodeFlags_Selected;

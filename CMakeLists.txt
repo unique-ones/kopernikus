@@ -28,6 +28,7 @@ project(kopernikus VERSION 0.0.1 DESCRIPTION "kopernikus" LANGUAGES C)
 
 # Set the C standard
 set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add source

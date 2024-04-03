@@ -27,7 +27,7 @@
 #include <glad/glad.h>
 #include <solaris/types.h>
 
-typedef u64 Duration;
+typedef f64 Duration;
 typedef float f32;
 
 #define ASSERT(x, ...)                \

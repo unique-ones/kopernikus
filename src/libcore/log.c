@@ -26,10 +26,10 @@
 
 #include "log.h"
 
-void flogf(FILE* file, const char* message, ...) {
+void flogf(FILE *file, const char *message, ...) {
     // log time information
     time_t now = time(0);
-    struct tm* time_info = localtime(&now);
+    struct tm *time_info = localtime(&now);
     fprintf(file, "[%02d:%02d:%02d] ", time_info->tm_hour, time_info->tm_min, time_info->tm_sec);
 
     va_list list;

@@ -24,32 +24,54 @@
 #ifndef CORE_UI_SEQUENCER_H
 #define CORE_UI_SEQUENCER_H
 
-#include "browser.h"
-
 #include <libcore/types.h>
 
-typedef enum SequenceNodeType { SEQUENCE_NODE_TRACK, SEQUENCE_NODE_WAIT } SequenceNodeType;
+#include "browser.h"
+
+typedef enum SequenceNodeType {
+    SEQUENCE_NODE_TRACK,
+    SEQUENCE_NODE_WAIT
+} SequenceNodeType;
 
 /// Forward declare Sequencer types
 typedef struct Sequencer Sequencer;
 typedef struct SequenceNode SequenceNode;
 typedef struct SequenceLink SequenceLink;
 
+typedef struct SequenceNodeTrackData {
+    /// The duration of the node
+    Duration duration;
+
+    /// The unit of the duration
+    TimeUnit unit;
+
+    /// The object if the node is of an object related type
+    ObjectEntry object;
+} SequenceNodeTrackData;
+
+typedef struct SequenceNodeWaitData {
+    /// The duration of the node
+    Duration duration;
+
+    /// The unit of the duration
+    TimeUnit unit;
+} SequenceNodeWaitData;
+
 typedef struct SequenceNode {
     /// The previous node in the sequence
-    SequenceNode* previous;
+    SequenceNode *previous;
 
     /// The next node in the sequence
-    SequenceNode* next;
+    SequenceNode *next;
 
     /// The type of the node
     SequenceNodeType type;
 
-    /// The object if the node is of an object related type
-    ObjectEntry object;
-
-    /// The duration of the node in seconds
-    Duration duration;
+    /// The data of the sequence node
+    union {
+        SequenceNodeTrackData track;
+        SequenceNodeWaitData wait;
+    };
 
     /// The ID of the node which is required for linking
     u64 id;
@@ -58,23 +80,22 @@ typedef struct SequenceNode {
 
 /// Create a new track sequence node
 /// @param sequencer The sequencer handle
-/// @param entry The object entry
-/// @param duration The sequence duration
+/// @param data The track data
 /// @return A track sequence node that lives inside the sequencer arena
-SequenceNode* sequence_node_make_track(Sequencer* sequencer, ObjectEntry* entry, Duration duration);
+SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackData *data);
 
 /// Create a new wait sequence node
 /// @param sequencer The sequencer handle
-/// @param duration The sequence duration
+/// @param data The wait data
 /// @return A wait sequence node that lives inside the sequencer arena
-SequenceNode* sequence_node_make_wait(Sequencer* sequencer, Duration duration);
+SequenceNode *sequence_node_make_wait(Sequencer *sequencer, SequenceNodeWaitData *data);
 
 typedef struct SequenceLink {
     /// The previous link in the sequence
-    SequenceLink* previous;
+    SequenceLink *previous;
 
     /// The next link in the sequence
-    SequenceLink* next;
+    SequenceLink *next;
 
     /// The origin ID, which resembles the ID of the origin node where the link starts
     u64 origin_id;
@@ -91,20 +112,20 @@ typedef struct SequenceLink {
 /// @param origin_id The ID of the origin node
 /// @param target_id The ID of the target node
 /// @return A link that lives inside the sequencer arena
-SequenceLink* sequence_link_make(Sequencer* sequencer, u64 origin_id, u64 target_id);
+SequenceLink *sequence_link_make(Sequencer *sequencer, u64 origin_id, u64 target_id);
 
 typedef struct Sequencer {
     /// Start of the node sequence
-    SequenceNode* node_head;
+    SequenceNode *node_head;
 
     /// End of the node sequence
-    SequenceNode* node_tail;
+    SequenceNode *node_tail;
 
     /// Start of the link sequence
-    SequenceLink* link_head;
+    SequenceLink *link_head;
 
     /// End of the link sequence
-    SequenceLink* link_tail;
+    SequenceLink *link_tail;
 
     /// Number of nodes
     usize node_count;
@@ -120,37 +141,41 @@ typedef struct Sequencer {
 
     /// This flag controls whether the sequencer timeline is displayed
     b8 show_timeline;
+
+    /// The object browser
+    ObjectBrowser *browser;
 } Sequencer;
 
 /// Create a new sequencer
 /// @param sequencer The sequencer handle
-void sequencer_make(Sequencer* sequencer);
+/// @param browser The browser handle
+void sequencer_make(Sequencer *sequencer, ObjectBrowser *browser);
 
 /// Destroy the sequencer
 /// @param sequencer The sequencer handle
-void sequencer_destroy(Sequencer* sequencer);
+void sequencer_destroy(Sequencer *sequencer);
 
 /// Clear the sequencer
 /// @param sequencer The sequencer handle
-void sequencer_clear(Sequencer* sequencer);
+void sequencer_clear(Sequencer *sequencer);
 
 /// Emplace a node into the sequencer node list
 /// @param sequencer The sequencer handle
 /// @param node The sequence node
-void sequencer_emplace_node(Sequencer* sequencer, SequenceNode* node);
+void sequencer_emplace_node(Sequencer *sequencer, SequenceNode *node);
 
 /// Emplace a link into the sequencer link list
 /// @param sequencer The sequencer handle
 /// @param link The sequence link
-void sequencer_emplace_link(Sequencer* sequencer, SequenceLink* link);
+void sequencer_emplace_link(Sequencer *sequencer, SequenceLink *link);
 
 /// Remove a link by its ID
 /// @param sequencer The sequencer handle
 /// @param link_id The id of the sequence link
-void sequencer_remove_link(Sequencer* sequencer, u64 link_id);
+void sequencer_remove_link(Sequencer *sequencer, u64 link_id);
 
 /// Draw the sequencer
 /// @param sequencer The sequencer handle
-void sequencer_render(Sequencer* sequencer);
+void sequencer_render(Sequencer *sequencer);
 
 #endif// CORE_UI_SEQUENCER_H
