@@ -33,11 +33,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE .)
 target_link_libraries(${PROJECT_NAME} PRIVATE "libcore" "libascom")
 
 # we want to use unsecure functions ;)
-if(MSVC)
+if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS=1)
-    target_compile_options(realtime PRIVATE /W4 /WX)
+    target_compile_definitions(libcore PRIVATE _CRT_SECURE_NO_WARNINGS=1)
+    target_compile_definitions(libascom PRIVATE _CRT_SECURE_NO_WARNINGS=1)
+endif()
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-gnu-anonymous-struct -Wno-nested-anon-types)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-gnu-anonymous-struct -Wno-nested-anon-types -Wno-strict-prototypes -Wno-language-extension-token)
 endif()
 
 # Copy Assets to the Output Directory

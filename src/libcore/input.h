@@ -26,7 +26,10 @@
 
 #include "types.h"
 
-typedef enum MouseButton { MOUSE_BUTTON_LEFT = 0, MOUSE_BUTTON_RIGHT = 1 } MouseButton;
+typedef enum MouseButton {
+    MOUSE_BUTTON_LEFT = 0,
+    MOUSE_BUTTON_RIGHT = 1
+} MouseButton;
 
 /// Checks if the mouse is currently pressed
 /// @param button the button to check for
@@ -35,7 +38,7 @@ b8 input_mouse_pressed(MouseButton button);
 
 /// Retrieves the current position of the mouse cursor in world coordinates
 /// @return Mouse cursor position
-Vector2f input_mouse_position();
+Vector2f input_mouse_position(void);
 
 typedef enum KeyCode {
     KEY_CODE_SPACE = 32,

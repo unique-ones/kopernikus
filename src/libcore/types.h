@@ -25,6 +25,7 @@
 #define CORE_TYPES_H
 
 #include <glad/glad.h>
+#include <inttypes.h>
 #include <solaris/types.h>
 
 typedef f64 Duration;

@@ -26,13 +26,13 @@
 
 /// Checks if the mouse is currently pressed
 b8 input_mouse_pressed(MouseButton button) {
-    Display* instance = display_instance();
+    Display *instance = display_instance();
     return glfwGetMouseButton(instance->handle, button) == GLFW_PRESS;
 }
 
 /// Retrieves the current position of the mouse cursor in world coordinates
-Vector2f input_mouse_position() {
-    Display* instance = display_instance();
+Vector2f input_mouse_position(void) {
+    Display *instance = display_instance();
     double x, y;
     glfwGetCursorPos(instance->handle, &x, &y);
     return (Vector2f){ .x = (f32) x, .y = (f32) y };
@@ -40,6 +40,6 @@ Vector2f input_mouse_position() {
 
 /// Checks if the specified key code was pressed
 b8 key_pressed(key_code_t code) {
-    Display* instance = display_instance();
+    Display *instance = display_instance();
     return glfwGetKey(instance->handle, code) == GLFW_PRESS;
 }

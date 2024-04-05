@@ -27,11 +27,11 @@
 #include "display.h"
 
 /// Internal singleton instance
-static Display* instance = nil;
+static Display *instance = nil;
 
 /// Framebuffer resize callback
 static void display_framebuffer_callback(GLFWwindow *handle, s32 width, s32 height) {
-    Display*self = glfwGetWindowUserPointer(handle);
+    Display *self = glfwGetWindowUserPointer(handle);
     if (self) {
         self->width = (u32) width;
         self->height = (u32) height;
@@ -75,7 +75,7 @@ display_error_callback(u32 source, u32 type, u32 id, u32 severity, s32 length, c
 }
 
 /// Creates a new window and a corresponding OpenGL context
-b8 display_create(Display*self, const char *title, u32 width, u32 height) {
+b8 display_create(Display *self, const char *title, u32 width, u32 height) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -110,14 +110,14 @@ b8 display_create(Display*self, const char *title, u32 width, u32 height) {
 }
 
 /// Destroys the window
-void display_destroy(Display*self) {
+void display_destroy(Display *self) {
     glfwDestroyWindow(self->handle);
     glfwTerminate();
     instance = nil;
 }
 
 /// Swaps front and back buffer, polls for events
-f64 display_update_frame(Display*self) {
+f64 display_update_frame(Display *self) {
     glfwPollEvents();
     glfwSwapBuffers(self->handle);
     f64 time = glfwGetTime();
@@ -127,16 +127,16 @@ f64 display_update_frame(Display*self) {
 }
 
 /// Checks if the window should be closed or not
-b8 display_running(Display*self) {
+b8 display_running(Display *self) {
     return self->running && !glfwWindowShouldClose(self->handle);
 }
 
 /// Tells the display that it should no longer be running
-void display_exit(Display* self) {
+void display_exit(Display *self) {
     self->running = false;
 }
 
 /// Retrieves the current display instance
-Display* display_instance() {
+Display *display_instance(void) {
     return instance;
 }

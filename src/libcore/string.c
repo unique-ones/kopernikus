@@ -27,13 +27,13 @@
 #include <libcore/string.h>
 
 /// Creates a nil String
-String string_nil() {
+String string_nil(void) {
     return (String){ .base = nil, .length = 0 };
 }
 
 /// Creates a new string instance
-String string_new(MemoryArena* arena, const char* data, ssize length) {
-    String result = { .base = (char*) memory_arena_alloc(arena, length), .length = length };
+String string_new(MemoryArena *arena, const char *data, ssize length) {
+    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
     memcpy(result.base, data, length);
     return result;
 }

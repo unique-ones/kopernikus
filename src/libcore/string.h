@@ -27,17 +27,17 @@
 #include <solaris/string.h>
 
 typedef struct StringBuffer {
-    char* data;
+    char *data;
     ssize size;
 } StringBuffer;
 
 typedef struct String {
-    char* base;
+    char *base;
     ssize length;
 } String;
 
 /// Creates a nil String
-String string_nil();
+String string_nil(void);
 
 /// Creates a new String instance
 /// @param arena The arena for the allocation
@@ -47,6 +47,6 @@ String string_nil();
 /// @note Strings are heap allocated, which is the reason
 ///       why an arena is necessary. For views to constant
 ///       strings see StringView
-String string_new(MemoryArena* arena, const char* data, ssize length);
+String string_new(MemoryArena *arena, const char *data, ssize length);
 
 #endif// KOPERNIKUS_UTILITY_STRING_H

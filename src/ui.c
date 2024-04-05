@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include "ui.h"
+#include "browser.h"
 
 #include <cimgui.h>
 #include <cimgui_impl.h>
@@ -42,7 +43,7 @@
 static const char *UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
 
 
-static void ui_setup_style() {
+static void ui_setup_style(void) {
     ImGuiIO *io = igGetIO();
 
     static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
@@ -166,7 +167,7 @@ void ui_initialize(Display *display) {
 }
 
 /// Destroys the ui context
-void ui_destroy() {
+void ui_destroy(void) {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot_DestroyContext(nil);
@@ -175,7 +176,7 @@ void ui_destroy() {
 }
 
 /// Begins a new ui draw pass
-void ui_begin() {
+void ui_begin(void) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     igNewFrame();
@@ -204,7 +205,7 @@ void ui_begin() {
 }
 
 /// Ends the current ui draw pass
-void ui_end() {
+void ui_end(void) {
     igEnd();
     igRender();
     ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
@@ -229,17 +230,17 @@ b8 ui_window_begin(const char *label, b8 *open) {
 }
 
 /// Ends the current window
-void ui_window_end() {
+void ui_window_end(void) {
     igEnd();
 }
 
 /// Begin the main menu
-b8 ui_main_menu_begin() {
+b8 ui_main_menu_begin(void) {
     return igBeginMainMenuBar();
 }
 
 /// End the main menu
-void ui_main_menu_end() {
+void ui_main_menu_end(void) {
     igEndMainMenuBar();
 }
 
@@ -249,7 +250,7 @@ b8 ui_menu_begin(const char *label) {
 }
 
 /// End the menu
-void ui_menu_end() {
+void ui_menu_end(void) {
     igEndMenu();
 }
 
@@ -313,7 +314,7 @@ void ui_tooltip_hovered(const char *fmt, ...) {
 }
 
 /// Draw a separator
-void ui_separator() {
+void ui_separator(void) {
     igSeparator();
 }
 
@@ -340,7 +341,7 @@ void ui_item_width_begin(f32 width) {
 }
 
 /// Ends setting the width of the next items
-void ui_item_width_end() {
+void ui_item_width_end(void) {
     igPopItemWidth();
 }
 
@@ -387,7 +388,7 @@ b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected) {
 }
 
 /// Ends the current tree node
-void ui_tree_node_end() {
+void ui_tree_node_end(void) {
     igTreePop();
 }
 
@@ -398,9 +399,33 @@ b8 ui_tree_item(const char *label, const char *icon, b8 selected) {
         flags |= ImGuiTreeNodeFlags_Selected;
         igPushStyleColor_Vec4(ImGuiCol_Text, igGetStyle()->Colors[ImGuiCol_TextSelectedBg]);
     }
-    ImGuiID id = igGetID_Str(label);
-    if (igTreeNodeBehavior(id, flags, label, nil)) {
+    if (igTreeNodeBehavior(igGetID_Str(label), flags, label, nil)) {
         igTreePop();
+    }
+    b8 clicked = ui_selected();
+    if (icon != nil) {
+        ui_icon_end_of_line(icon);
+    }
+    if (selected) {
+        igPopStyleColor(1);
+    }
+    return clicked;
+}
+
+/// Draws a tree node item that is draggable with an optional icon
+b8 ui_tree_item_drag_drop_source(const char *label, const char *icon, b8 selected, void *data, usize size) {
+    ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_Bullet;
+    if (selected) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+        igPushStyleColor_Vec4(ImGuiCol_Text, igGetStyle()->Colors[ImGuiCol_TextSelectedBg]);
+    }
+    if (igTreeNodeBehavior(igGetID_Str(label), flags, label, nil)) {
+        igTreePop();
+    }
+    if (igBeginDragDropSource(ImGuiDragDropFlags_None)) {
+        igSetDragDropPayload(object_browser_payload_id(), data, size, ImGuiCond_None);
+        ui_text("%s", label);
+        igEndDragDropSource();
     }
     b8 clicked = ui_selected();
     if (icon != nil) {
@@ -418,12 +443,12 @@ b8 ui_selected(void) {
 }
 
 /// Check if the left mouse button is clicked
-b8 ui_click_left() {
+b8 ui_click_left(void) {
     return igIsMouseClicked_Bool(ImGuiMouseButton_Left, false);
 }
 
 /// Check if the right mouse button is clicked
-b8 ui_click_right() {
+b8 ui_click_right(void) {
     return igIsMouseClicked_Bool(ImGuiMouseButton_Right, false);
 }
 

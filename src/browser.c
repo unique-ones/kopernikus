@@ -33,6 +33,7 @@
 
 #include "browser.h"
 #include "solaris/math.h"
+#include "solaris/object.h"
 #include "ui.h"
 
 #include <cimgui.h>
@@ -40,7 +41,7 @@
 
 
 /// Create a new ObjectBrowser
-void object_browser_make(ObjectBrowser* browser) {
+void object_browser_make(ObjectBrowser *browser) {
     browser->catalog = catalog_acquire();
     browser->arena = memory_arena_identity(ALIGNMENT8);
     browser->globe_tree = globe_tree_make_root(&browser->arena);
@@ -54,23 +55,23 @@ void object_browser_make(ObjectBrowser* browser) {
     browser->show_properties = true;
 
     usize object_count = browser->catalog.object_count;
-    browser->heatmap.right_ascensions = (f64*) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
-    browser->heatmap.declinations = (f64*) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
+    browser->heatmap.right_ascensions = (f64 *) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
+    browser->heatmap.declinations = (f64 *) memory_arena_alloc(&browser->arena, sizeof(f64) * object_count);
 
     for (usize i = 0; i < browser->catalog.object_count; ++i) {
-        Object* object = browser->catalog.objects + i;
+        Object *object = browser->catalog.objects + i;
         browser->heatmap.right_ascensions[i] = object->position.right_ascension;
         browser->heatmap.declinations[i] = object->position.declination;
     }
 }
 
 /// Destroys the ObjectBrowser
-void object_browser_destroy(ObjectBrowser* browser) {
+void object_browser_destroy(ObjectBrowser *browser) {
     memory_arena_destroy(&browser->arena);
 }
 
 /// Render the catalog map
-static void render_catalog_map(ObjectBrowser* browser, bool fill_region) {
+static void render_catalog_map(ObjectBrowser *browser, bool fill_region) {
     ImVec2 region = { 0 };
     igGetContentRegionAvail(&region);
     if (!fill_region) {
@@ -92,7 +93,7 @@ static void render_catalog_map(ObjectBrowser* browser, bool fill_region) {
 }
 
 /// Render the tree view of the ObjectBrowser
-static void object_browser_render_tree(ObjectBrowser* browser) {
+static void object_browser_render_tree(ObjectBrowser *browser) {
     if (!ui_window_begin("Object Browser", &browser->show_browser)) {
         return;
     }
@@ -116,8 +117,8 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
         if (ui_tree_node_begin(ICON_FA_EARTH_EUROPE " Planets", nil, false)) {
             for (usize i = 0; i < browser->catalog.planet_count; ++i) {
                 // Fetch the planet from the browser catalog
-                Planet* planet = browser->catalog.planets + i;
-                const char* name = planet_string(planet->name);
+                Planet *planet = browser->catalog.planets + i;
+                const char *name = planet_string(planet->name);
 
                 // Check if search matches
                 StringView view_name = string_view_from_native(name);
@@ -131,11 +132,13 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
 
                 // Check if the current planet is selected
                 b8 selected = browser->selected.tree_index == tree_index;
-                if (ui_tree_item(name, ICON_FA_FLASK, selected)) {
+                if (ui_tree_item_drag_drop_source(name, ICON_FA_FLASK, selected, &browser->selected,
+                                                  sizeof browser->selected)) {
                     browser->selected.tree_index = tree_index;
                     browser->selected.classification = CLASSIFICATION_PLANET;
                     browser->selected.planet = planet;
                 }
+
                 tree_index += 1;
             }
             ui_tree_node_end();
@@ -148,10 +151,10 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
                 b8 selected = browser->selected.tree_index == tree_index;
 
                 // Fetch the object from the browser catalog
-                Object* object = browser->catalog.objects + i;
+                Object *object = browser->catalog.objects + i;
 
                 char object_name[128] = { 0 };
-                sprintf(object_name, "%lu (%s)", object->designation.index,
+                sprintf(object_name, "%" PRIu64 " (%s)", object->designation.index,
                         catalog_string(object->designation.catalog));
 
                 // Check if search matches
@@ -164,7 +167,8 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
                     continue;
                 }
 
-                if (ui_tree_item(object_name, ICON_FA_FLASK, selected)) {
+                if (ui_tree_item_drag_drop_source(object_name, ICON_FA_FLASK, selected, &browser->selected,
+                                                  sizeof browser->selected)) {
                     browser->selected.tree_index = tree_index;
                     browser->selected.classification = object->classification;
                     browser->selected.object = object;
@@ -177,7 +181,7 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
     ui_window_end();
 }
 
-static void object_browser_render_properties_planet(Planet* planet) {
+static void object_browser_render_properties_planet(Planet *planet) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
         ui_note("Designation");
         ui_property_text_readonly("Name", planet_string(planet->name));
@@ -240,7 +244,7 @@ static void object_browser_render_properties_planet(Planet* planet) {
     }
 }
 
-static void object_browser_render_properties_object(Object* object) {
+static void object_browser_render_properties_object(Object *object) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
         ui_note("Designation");
         ui_property_text_readonly("Catalog", catalog_string(object->designation.catalog));
@@ -281,7 +285,7 @@ static void object_browser_render_properties_object(Object* object) {
 }
 
 /// Render the properties of the selected entry
-static void object_browser_render_properties(ObjectBrowser* browser) {
+static void object_browser_render_properties(ObjectBrowser *browser) {
     if (!ui_window_begin("Object Properties", &browser->show_properties)) {
         return;
     }
@@ -303,7 +307,12 @@ static void object_browser_render_properties(ObjectBrowser* browser) {
 }
 
 /// Render the ObjectBrowser
-void object_browser_render(ObjectBrowser* browser) {
+void object_browser_render(ObjectBrowser *browser) {
     object_browser_render_tree(browser);
     object_browser_render_properties(browser);
+}
+
+/// Retrieves the ID of object browser paylods
+const char *object_browser_payload_id(void) {
+    return "##ObjectBrowserPayload";
 }

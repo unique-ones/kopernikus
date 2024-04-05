@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_UI_OBJECT_BROWSER_H
-#define CORE_UI_OBJECT_BROWSER_H
+#ifndef KOPERNIKUS_BROWSER_H
+#define KOPERNIKUS_BROWSER_H
 
 #include <solaris/catalog.h>
 #include "solaris/globe.h"
@@ -40,8 +40,8 @@ typedef struct ObjectEntry {
 
     /// Reference to the actual object/planet
     union {
-        Object* object;
-        Planet* planet;
+        Object *object;
+        Planet *planet;
     };
 } ObjectEntry;
 
@@ -53,12 +53,12 @@ typedef struct ObjectBrowser {
     MemoryArena arena;
 
     /// GlobeTree for spatial acceleration
-    GlobeTree* globe_tree;
+    GlobeTree *globe_tree;
 
     /// Heat map for displaying all the objects
     struct {
-        f64* right_ascensions;
-        f64* declinations;
+        f64 *right_ascensions;
+        f64 *declinations;
     } heatmap;
 
     /// Selected object from the tree
@@ -76,14 +76,18 @@ typedef struct ObjectBrowser {
 
 /// Create a new ObjectBrowser
 /// @param browser The browser
-void object_browser_make(ObjectBrowser* browser);
+void object_browser_make(ObjectBrowser *browser);
 
 /// Destroys the ObjectBrowser
 /// @param browser The browser
-void object_browser_destroy(ObjectBrowser* browser);
+void object_browser_destroy(ObjectBrowser *browser);
 
 /// Render the ObjectBrowser
 /// @param browser The browser
-void object_browser_render(ObjectBrowser* browser);
+void object_browser_render(ObjectBrowser *browser);
 
-#endif// CORE_UI_OBJECT_BROWSER_H
+/// Retrieves the ID of object browser paylods
+/// @return The ID of object browser payloads
+const char *object_browser_payload_id(void);
+
+#endif// KOPERNIKUS_BROWSER_H

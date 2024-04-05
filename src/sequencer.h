@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_UI_SEQUENCER_H
-#define CORE_UI_SEQUENCER_H
+#ifndef KOPERNIKUS_SEQUENCER_H
+#define KOPERNIKUS_SEQUENCER_H
 
 #include <libcore/types.h>
 
@@ -39,23 +39,9 @@ typedef struct SequenceNode SequenceNode;
 typedef struct SequenceLink SequenceLink;
 
 typedef struct SequenceNodeTrackData {
-    /// The duration of the node
-    Duration duration;
-
-    /// The unit of the duration
-    TimeUnit unit;
-
     /// The object if the node is of an object related type
     ObjectEntry object;
 } SequenceNodeTrackData;
-
-typedef struct SequenceNodeWaitData {
-    /// The duration of the node
-    Duration duration;
-
-    /// The unit of the duration
-    TimeUnit unit;
-} SequenceNodeWaitData;
 
 typedef struct SequenceNode {
     /// The previous node in the sequence
@@ -67,11 +53,14 @@ typedef struct SequenceNode {
     /// The type of the node
     SequenceNodeType type;
 
-    /// The data of the sequence node
-    union {
-        SequenceNodeTrackData track;
-        SequenceNodeWaitData wait;
-    };
+    /// The duration of the node
+    Duration duration;
+
+    /// The unit of the duration
+    TimeUnit unit;
+
+    /// Tracking specific data
+    SequenceNodeTrackData track;
 
     /// The ID of the node which is required for linking
     u64 id;
@@ -80,15 +69,21 @@ typedef struct SequenceNode {
 
 /// Create a new track sequence node
 /// @param sequencer The sequencer handle
+/// @param duration The duration of the node
+/// @param unit The unit of the duration of the node
 /// @param data The track data
 /// @return A track sequence node that lives inside the sequencer arena
-SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackData *data);
+SequenceNode *sequence_node_make_track(Sequencer *sequencer,
+                                       Duration duration,
+                                       TimeUnit unit,
+                                       SequenceNodeTrackData *data);
 
 /// Create a new wait sequence node
 /// @param sequencer The sequencer handle
-/// @param data The wait data
+/// @param duration The duration of the node
+/// @param unit The unit of the duration of the node
 /// @return A wait sequence node that lives inside the sequencer arena
-SequenceNode *sequence_node_make_wait(Sequencer *sequencer, SequenceNodeWaitData *data);
+SequenceNode *sequence_node_make_wait(Sequencer *sequencer, Duration duration, TimeUnit unit);
 
 typedef struct SequenceLink {
     /// The previous link in the sequence
@@ -178,4 +173,4 @@ void sequencer_remove_link(Sequencer *sequencer, u64 link_id);
 /// @param sequencer The sequencer handle
 void sequencer_render(Sequencer *sequencer);
 
-#endif// CORE_UI_SEQUENCER_H
+#endif// KOPERNIKUS_SEQUENCER_H

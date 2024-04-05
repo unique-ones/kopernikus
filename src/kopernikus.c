@@ -25,13 +25,12 @@
 #include <libcore/display.h>
 #include <libcore/log.h>
 
-
 #include "browser.h"
 #include "sequencer.h"
 #include "ui.h"
 
-int main() {
 
+int main(void) {
     Display display = { 0 };
     display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);

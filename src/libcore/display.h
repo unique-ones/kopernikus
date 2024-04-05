@@ -29,7 +29,7 @@
 #include <GLFW/glfw3.h>
 
 typedef struct Display {
-    GLFWwindow* handle;
+    GLFWwindow *handle;
     u32 width;
     u32 height;
     f64 time;
@@ -42,28 +42,28 @@ typedef struct Display {
 /// @param width width of the window
 /// @param height height of the window
 /// @return Boolean if the display could be created
-b8 display_create(Display* self, const char* title, u32 width, u32 height);
+b8 display_create(Display *self, const char *title, u32 width, u32 height);
 
 /// Destroys the window
 /// @param self display handle
-void display_destroy(Display* self);
+void display_destroy(Display *self);
 
 /// Swaps front and back buffer, polls for events
 /// @param self display handle
 /// @return frame time
-f64 display_update_frame(Display* self);
+f64 display_update_frame(Display *self);
 
 /// Checks if the window should be closed or not
 /// @param self display handle
 /// @return
-b8 display_running(Display* self);
+b8 display_running(Display *self);
 
 /// Tells the display that it should no longer be running
 /// @param self Display handle
-void display_exit(Display* self);
+void display_exit(Display *self);
 
 /// Retrieves the current display instance
 /// @return display instance
-Display* display_instance();
+Display *display_instance(void);
 
 #endif// CORE_DISPLAY_H

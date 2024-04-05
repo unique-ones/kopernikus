@@ -132,7 +132,7 @@ b8 ui_selectable(const char *label, const char *icon);
 void ui_item_width_begin(f32 width);
 
 /// Ends setting the width of the next items
-void ui_item_width_end();
+void ui_item_width_end(void);
 
 // ===================================================================================
 // UI property
@@ -189,6 +189,15 @@ void ui_tree_node_end(void);
 /// @param selected Draw the item as selected
 /// @return Boolean if the item is clicked
 b8 ui_tree_item(const char *label, const char *icon, b8 selected);
+
+/// Draws a tree node item that is draggable with an optional icon
+/// @param label The label of the item
+/// @param icon Icon at the end of tree node item (optional)
+/// @param selected Draw the item as selected
+/// @param data The drag and drop payload
+/// @param size The size of the drag and drop payload
+/// @return Boolean if the item is clicked
+b8 ui_tree_item_drag_drop_source(const char *label, const char *icon, b8 selected, void *data, usize size);
 
 // ===================================================================================
 // UI state
