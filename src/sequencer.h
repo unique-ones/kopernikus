@@ -63,7 +63,7 @@ typedef struct SequenceNode {
     SequenceNodeTrackData track;
 
     /// The ID of the node which is required for linking
-    u64 id;
+    s32 id;
 } SequenceNode;
 
 
@@ -93,13 +93,13 @@ typedef struct SequenceLink {
     SequenceLink *next;
 
     /// The origin ID, which resembles the ID of the origin node where the link starts
-    u64 origin_id;
+    s32 origin_id;
 
     /// The target ID, which resembles the ID of the target node where the link points to
-    u64 target_id;
+    s32 target_id;
 
     /// The id of the link itself
-    u64 id;
+    s32 id;
 } SequenceLink;
 
 /// Create a new link instance
@@ -107,7 +107,7 @@ typedef struct SequenceLink {
 /// @param origin_id The ID of the origin node
 /// @param target_id The ID of the target node
 /// @return A link that lives inside the sequencer arena
-SequenceLink *sequence_link_make(Sequencer *sequencer, u64 origin_id, u64 target_id);
+SequenceLink *sequence_link_make(Sequencer *sequencer, s32 origin_id, s32 target_id);
 
 typedef struct Sequencer {
     /// Start of the node sequence
@@ -166,8 +166,13 @@ void sequencer_emplace_link(Sequencer *sequencer, SequenceLink *link);
 
 /// Remove a link by its ID
 /// @param sequencer The sequencer handle
-/// @param link_id The id of the sequence link
-void sequencer_remove_link(Sequencer *sequencer, u64 link_id);
+/// @param link_id The ID of the sequence link
+void sequencer_remove_link(Sequencer *sequencer, s32 link_id);
+
+/// Remove a link by a node ID
+/// @param sequencer The sequencer handle
+/// @param node_id The ID of a node
+void sequencer_remove_link_by_node(Sequencer *sequencer, s32 node_id);
 
 /// Draw the sequencer
 /// @param sequencer The sequencer handle

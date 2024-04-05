@@ -166,8 +166,16 @@ void ui_property_real_readonly(const char *property, f64 x, const char *fmt);
 /// @param buffer The search buffer
 /// @param label The label
 /// @param placeholder The placeholder
-/// @return Boolean that indicates input
+/// @return A boolean value that indicates whether the input changed
 b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder);
+
+/// Draw a combobox
+/// @param The title of the combobox
+/// @param selected The index of the selected item
+/// @param items The items
+/// @param length The number of items
+/// @return A boolean value that indicates whether the input changed
+b8 ui_combobox(const char *title, s32 *selected, const char **items, usize length);
 
 // ===================================================================================
 // UI tree
@@ -183,14 +191,14 @@ b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected);
 /// End the current tree node
 void ui_tree_node_end(void);
 
-/// Draws a tree node item with an optional icon
+/// Draw a tree node item with an optional icon
 /// @param label The label of the item
 /// @param icon Icon at the end of tree node item (optional)
 /// @param selected Draw the item as selected
 /// @return Boolean if the item is clicked
 b8 ui_tree_item(const char *label, const char *icon, b8 selected);
 
-/// Draws a tree node item that is draggable with an optional icon
+/// Draw a tree node item that is draggable with an optional icon
 /// @param label The label of the item
 /// @param icon Icon at the end of tree node item (optional)
 /// @param selected Draw the item as selected
@@ -198,6 +206,40 @@ b8 ui_tree_item(const char *label, const char *icon, b8 selected);
 /// @param size The size of the drag and drop payload
 /// @return Boolean if the item is clicked
 b8 ui_tree_item_drag_drop_source(const char *label, const char *icon, b8 selected, void *data, usize size);
+
+// ===================================================================================
+// UI popups
+// ===================================================================================
+
+/// Open the popup with the specified ID
+/// @param id The popup ID
+void ui_popup_open(const char *id);
+
+/// Begin a popup
+/// @param id The popup ID
+/// @return Boolean if the popup is open
+b8 ui_popup_begin(const char *id);
+
+// ===================================================================================
+// UI nodes
+// ===================================================================================
+
+/// Begin a node item
+void ui_node_editor_begin(void);
+
+/// End a node item
+void ui_node_editor_end(void);
+
+/// Check whether a node editor ection is present (right click)
+/// @return Boolean if a node editor action is present
+b8 ui_node_editor_action(void);
+
+/// Begin a node item
+/// @param id The id of the node
+void ui_node_begin(s32 id);
+
+/// End a node item
+void ui_node_end(void);
 
 // ===================================================================================
 // UI state

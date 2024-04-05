@@ -140,13 +140,14 @@ static void ui_setup_style(void) {
     style->PopupRounding = 4;
     style->ChildRounding = 4;
 
-    ImNodesStyle *imNodesStyle = imnodes_GetStyle();
-    imNodesStyle->Colors[ImNodesCol_Link] = UI_COLOR32(0.8f, 0.8f, 0.0f, 1.0f);
-    imNodesStyle->Colors[ImNodesCol_LinkHovered] = UI_COLOR32(1.0f, 1.0f, 0.0f, 1.0f);
-    imNodesStyle->Colors[ImNodesCol_LinkSelected] = UI_COLOR32(0.9f, 0.9f, 0.0f, 1.0f);
-    imNodesStyle->Colors[ImNodesCol_TitleBar] = UI_COLOR32(0.55f, 0.0f, 0.75f, 1.0f);
-    imNodesStyle->Colors[ImNodesCol_TitleBarHovered] = UI_COLOR32(0.60f, 0.0f, 0.8f, 1.0f);
-    imNodesStyle->Colors[ImNodesCol_TitleBarSelected] = UI_COLOR32(0.57f, 0.0f, 0.77f, 1.0f);
+    ImNodesStyle *imnodes_style = imnodes_GetStyle();
+    imnodes_style->Colors[ImNodesCol_Link] = UI_COLOR32(0.8f, 0.8f, 0.0f, 1.0f);
+    imnodes_style->Colors[ImNodesCol_LinkHovered] = UI_COLOR32(1.0f, 1.0f, 0.0f, 1.0f);
+    imnodes_style->Colors[ImNodesCol_LinkSelected] = UI_COLOR32(0.9f, 0.9f, 0.0f, 1.0f);
+    imnodes_style->Colors[ImNodesCol_TitleBar] = UI_COLOR32(0.55f, 0.0f, 0.75f, 1.0f);
+    imnodes_style->Colors[ImNodesCol_TitleBarHovered] = UI_COLOR32(0.60f, 0.0f, 0.8f, 1.0f);
+    imnodes_style->Colors[ImNodesCol_TitleBarSelected] = UI_COLOR32(0.57f, 0.0f, 0.77f, 1.0f);
+    imnodes_style->Flags |= ImNodesStyleFlags_GridLinesPrimary;
 }
 
 /// Initializes the ui
@@ -164,10 +165,19 @@ void ui_initialize(Display *display) {
 
     ImGui_ImplGlfw_InitForOpenGL(display->handle, true);
     ImGui_ImplOpenGL3_Init("#version 450");
+
+    imnodes_PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick |
+                              ImNodesAttributeFlags_EnableLinkCreationOnSnap);
+
+    ImNodesIO *nodes_io = imnodes_GetIO();
+    nodes_io->LinkDetachWithModifierClick.Modifier = &io->KeyCtrl;
+    nodes_io->MultipleSelectModifier.Modifier = &io->KeyCtrl;
 }
 
 /// Destroys the ui context
 void ui_destroy(void) {
+    imnodes_PopAttributeFlag();
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot_DestroyContext(nil);
@@ -373,6 +383,11 @@ b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder
                          ImGuiInputTextFlags_None, nil, nil);
 }
 
+/// Draw a combobox
+b8 ui_combobox(const char *title, s32 *selected, const char **items, usize length) {
+    return igCombo_Str_arr(title, selected, items, length, -1);
+}
+
 /// Draws a tree node with an optional icon
 b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected) {
     ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_DefaultOpen;
@@ -435,6 +450,41 @@ b8 ui_tree_item_drag_drop_source(const char *label, const char *icon, b8 selecte
         igPopStyleColor(1);
     }
     return clicked;
+}
+
+/// Open the popup with the specified ID
+void ui_popup_open(const char *id) {
+    igOpenPopup_Str(id, ImGuiPopupFlags_None);
+}
+
+/// Begin a popup
+b8 ui_popup_begin(const char *id) {
+    return igBeginPopup(id, ImGuiWindowFlags_None);
+}
+
+/// Begin a node editor
+void ui_node_editor_begin(void) {
+    imnodes_BeginNodeEditor();
+}
+
+/// End a node editor
+void ui_node_editor_end(void) {
+    imnodes_EndNodeEditor();
+}
+
+/// Check whether a node editor ection is present (right click)
+b8 ui_node_editor_action(void) {
+    return imnodes_IsEditorHovered() && ui_click_right();
+}
+
+/// Begin a node item
+void ui_node_begin(s32 id) {
+    imnodes_BeginNode(id);
+}
+
+/// End a node item
+void ui_node_end(void) {
+    imnodes_EndNode();
 }
 
 /// Checks if the last ui item is selected

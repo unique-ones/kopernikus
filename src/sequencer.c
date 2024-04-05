@@ -24,6 +24,7 @@
 #include "sequencer.h"
 #include "browser.h"
 #include "cimgui.h"
+#include "libcore/input.h"
 #include "solaris/object.h"
 #include "solaris/planet.h"
 #include "solaris/time.h"
@@ -66,13 +67,13 @@ SequenceNode *sequence_node_make_wait(Sequencer *sequencer, Duration duration, T
 }
 
 /// Create a new link instance
-SequenceLink *sequence_link_make(Sequencer *sequencer, u64 origin_id, u64 target_id) {
+SequenceLink *sequence_link_make(Sequencer *sequencer, s32 origin_id, s32 target_id) {
     SequenceLink *link = (SequenceLink *) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
     link->previous = nil;
     link->next = nil;
     link->origin_id = origin_id;
     link->target_id = target_id;
-    link->id = sequencer->link_count + 1;
+    link->id = 0xFFFF + sequencer->link_count + 1;
     return link;
 }
 
@@ -97,6 +98,9 @@ void sequencer_destroy(Sequencer *sequencer) {
     sequencer->node_head = nil;
     sequencer->node_tail = nil;
     sequencer->node_count = 0;
+    sequencer->link_head = nil;
+    sequencer->link_tail = nil;
+    sequencer->link_count = 0;
     memory_arena_destroy(&sequencer->arena);
 }
 
@@ -105,6 +109,9 @@ void sequencer_clear(Sequencer *sequencer) {
     sequencer->node_head = nil;
     sequencer->node_tail = nil;
     sequencer->node_count = 0;
+    sequencer->link_head = nil;
+    sequencer->link_tail = nil;
+    sequencer->link_count = 0;
     memory_arena_destroy(&sequencer->arena);
     sequencer->arena = memory_arena_identity(ALIGNMENT8);
 }
@@ -113,49 +120,85 @@ void sequencer_clear(Sequencer *sequencer) {
 void sequencer_emplace_node(Sequencer *sequencer, SequenceNode *node) {
     if (sequencer->node_head == nil) {
         sequencer->node_head = node;
-        sequencer->node_count++;
-        return;
+        sequencer->node_tail = node;
+    } else {
+        sequencer->node_tail->next = node;
+        node->previous = sequencer->node_tail;
+        sequencer->node_tail = node;
     }
-
-    // Traverse all nodes
-    SequenceNode *it = sequencer->node_head;
-    for (; it->next != nil; it = it->next) { }
-
-    it->next = node;
-    node->previous = it;
-    sequencer->node_tail = node;
     sequencer->node_count++;
+}
+
+/// Remove a node by its ID
+void sequencer_remove_node(Sequencer *sequencer, s32 node_id) {
+    for (SequenceNode *it = sequencer->node_head; it != nil; it = it->next) {
+        if (it->id == node_id) {
+            if (it->previous != nil) {
+                it->previous->next = it->next;
+            } else {
+                sequencer->node_head = it->next;
+            }
+
+            if (it->next != nil) {
+                it->next->previous = it->previous;
+            } else {
+                sequencer->node_tail = it->previous;
+            }
+
+            sequencer_remove_link_by_node(sequencer, node_id);
+            return;
+        }
+    }
 }
 
 /// Emplace a link into the sequencer link list
 void sequencer_emplace_link(Sequencer *sequencer, SequenceLink *link) {
     if (sequencer->link_head == nil) {
         sequencer->link_head = link;
-        sequencer->link_count++;
-        return;
+        sequencer->link_tail = link;
+    } else {
+        sequencer->link_tail->next = link;
+        link->previous = sequencer->link_tail;
+        sequencer->link_tail = link;
     }
-
-    /// Traverse all nodes
-    SequenceLink *it = sequencer->link_head;
-    for (; it->next != nil; it = it->next) { }
-
-    it->next = link;
-    link->previous = it;
-    sequencer->link_tail = link;
     sequencer->link_count++;
 }
 
 /// Remove a link by its ID
-void sequencer_remove_link(Sequencer *sequencer, u64 link_id) {
-    // Traverse all nodes
-    SequenceLink *it = sequencer->link_head;
-    for (; it->next != nil; it = it->next) {
-        // We basically unhook the node from the list,
-        // but do not remove it since we allocate our
-        // nodes in the sequencer arena
+void sequencer_remove_link(Sequencer *sequencer, s32 link_id) {
+    for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
         if (it->id == link_id) {
-            it->previous->next = it->next;
-            it->next->previous = it->previous;
+            if (it->previous != nil) {
+                it->previous->next = it->next;
+            } else {
+                sequencer->link_head = it->next;
+            }
+
+            if (it->next != nil) {
+                it->next->previous = it->previous;
+            } else {
+                sequencer->link_tail = it->previous;
+            }
+            return;
+        }
+    }
+}
+
+/// Remove a link by a node ID
+void sequencer_remove_link_by_node(Sequencer *sequencer, s32 node_id) {
+    for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
+        if (it->origin_id == node_id || it->target_id == node_id) {
+            if (it->previous != nil) {
+                it->previous->next = it->next;
+            } else {
+                sequencer->link_head = it->next;
+            }
+
+            if (it->next != nil) {
+                it->next->previous = it->previous;
+            } else {
+                sequencer->link_tail = it->previous;
+            }
         }
     }
 }
@@ -165,7 +208,7 @@ static void sequencer_render_node_time_data(SequenceNode *node) {
     ui_property_real("Duration", &node->duration, "%.4f");
 
     static const char *UNITS[] = { "Seconds", "Minutes", "Hours", "Days", "Months", "Years" };
-    igCombo_Str_arr("Unit", &node->unit, UNITS, ARRAY_SIZE(UNITS), -1);
+    ui_combobox("Unit", &node->unit, UNITS, ARRAY_SIZE(UNITS));
 }
 
 /// Draw a wait node
@@ -174,11 +217,11 @@ static void sequencer_render_node_wait(SequenceNode *node, f32 width) {
     ui_text(ICON_FA_CLOCK " Wait");
     imnodes_EndNodeTitleBar();
 
-    imnodes_BeginInputAttribute((s32) node->id << 8, ImNodesPinShape_Circle);
+    imnodes_BeginInputAttribute(node->id << 8, ImNodesPinShape_Circle);
     ui_text("Previous\t");
     imnodes_EndInputAttribute();
     ui_keep_line();
-    imnodes_BeginOutputAttribute((s32) node->id << 16, ImNodesPinShape_Circle);
+    imnodes_BeginOutputAttribute(node->id << 16, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
 
@@ -193,11 +236,11 @@ static void sequencer_render_node_track(SequenceNode *node, f32 width) {
     ui_text(ICON_FA_CROSSHAIRS " Track");
     imnodes_EndNodeTitleBar();
 
-    imnodes_BeginInputAttribute((s32) node->id << 8, ImNodesPinShape_Circle);
+    imnodes_BeginInputAttribute(node->id << 8, ImNodesPinShape_Circle);
     ui_text("Previous\t");
     imnodes_EndInputAttribute();
     ui_keep_line();
-    imnodes_BeginOutputAttribute((s32) node->id << 16, ImNodesPinShape_Circle);
+    imnodes_BeginOutputAttribute(node->id << 16, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
 
@@ -220,7 +263,7 @@ static void sequencer_render_node_track(SequenceNode *node, f32 width) {
 
 /// Draw a node
 static void sequencer_render_node(Sequencer *sequencer, SequenceNode *node, f32 width) {
-    imnodes_BeginNode((s32) node->id);
+    ui_node_begin(node->id);
     switch (node->type) {
         case SEQUENCE_NODE_TRACK:
             sequencer_render_node_track(node, width);
@@ -229,7 +272,7 @@ static void sequencer_render_node(Sequencer *sequencer, SequenceNode *node, f32 
             sequencer_render_node_wait(node, width);
             break;
     }
-    imnodes_EndNode();
+    ui_node_end();
 
     if (node->type == SEQUENCE_NODE_TRACK && igBeginDragDropTarget()) {
         const ImGuiPayload *payload = igAcceptDragDropPayload(object_browser_payload_id(), ImGuiDragDropFlags_None);
@@ -246,7 +289,7 @@ static void sequencer_render_nodes(Sequencer *sequencer) {
         sequencer_render_node(sequencer, it, SEQUENCE_NODE_WIDTH);
     }
     for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
-        imnodes_Link((s32) it->id, (s32) it->origin_id, (s32) it->target_id);
+        imnodes_Link(it->id, it->origin_id, it->target_id);
     }
 }
 
@@ -270,33 +313,34 @@ static void sequencer_render_editor(Sequencer *sequencer) {
     ImVec2 window_padding = style->WindowPadding;
 
     // Begin the node editor itself
-    imnodes_BeginNodeEditor();
-    if (imnodes_IsEditorHovered() && ui_click_right()) {
-        igOpenPopup_Str(SEQUENCE_NODE_POPUP_ID, ImGuiPopupFlags_None);
+    ui_node_editor_begin();
+    if (ui_node_editor_action()) {
+        ui_popup_open(SEQUENCE_NODE_POPUP_ID);
     }
 
     // Push the saved style
     igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, window_padding);
     igPushStyleVar_Vec2(ImGuiStyleVar_FramePadding, frame_padding);
-    if (igBeginPopup(SEQUENCE_NODE_POPUP_ID, ImGuiWindowFlags_None)) {
+
+    if (ui_popup_begin(SEQUENCE_NODE_POPUP_ID)) {
         ui_note("Create Node");
         SequenceNode *node = nil;
         if (ui_selectable("Track", ICON_FA_CROSSHAIRS)) {
             if (sequencer->browser->selected.tree_index != -1) {
-                node = sequence_node_make_track(sequencer, 1, UNIT_MINUTES,
+                node = sequence_node_make_track(sequencer, 10, UNIT_MINUTES,
                                                 &(SequenceNodeTrackData){ sequencer->browser->selected });
             } else {
                 flogf(stderr, "[sequencer] Must select object in order to create a track node!\n");
             }
         }
         if (ui_selectable("Wait", ICON_FA_CLOCK)) {
-            node = sequence_node_make_wait(sequencer, 1, UNIT_MINUTES);
+            node = sequence_node_make_wait(sequencer, 10, UNIT_MINUTES);
         }
         if (node != nil) {
             ImVec2 mouse_pos;
             igGetMousePos(&mouse_pos);
-            imnodes_SetNodeScreenSpacePos((s32) node->id, mouse_pos);
-            imnodes_SnapNodeToGrid((s32) node->id);
+            imnodes_SetNodeScreenSpacePos(node->id, mouse_pos);
+            imnodes_SnapNodeToGrid(node->id);
             sequencer_emplace_node(sequencer, node);
         }
         ui_separator();
@@ -312,7 +356,22 @@ static void sequencer_render_editor(Sequencer *sequencer) {
 
     sequencer_render_nodes(sequencer);
     imnodes_MiniMap(0.2f, ImNodesMiniMapLocation_TopRight, nil, nil);
-    imnodes_EndNodeEditor();
+    ui_node_editor_end();
+
+    if (igBeginDragDropTarget()) {
+        const ImGuiPayload *payload = igAcceptDragDropPayload(object_browser_payload_id(), ImGuiDragDropFlags_None);
+        if (payload != nil && payload->DataSize == sizeof(ObjectEntry)) {
+            ImVec2 mouse_pos;
+            igGetMousePos(&mouse_pos);
+
+            SequenceNode *node = sequence_node_make_track(sequencer, 10, UNIT_MINUTES,
+                                                          &(SequenceNodeTrackData){ sequencer->browser->selected });
+            imnodes_SetNodeScreenSpacePos(node->id, mouse_pos);
+            imnodes_SnapNodeToGrid(node->id);
+            sequencer_emplace_node(sequencer, node);
+        }
+        igEndDragDropTarget();
+    }
 
     s32 origin_id, target_id;
     if (imnodes_IsLinkCreated_BoolPtr(&origin_id, &target_id, nil)) {
@@ -321,10 +380,9 @@ static void sequencer_render_editor(Sequencer *sequencer) {
     }
 
     s32 link_id;
-    if (imnodes_IsLinkDestroyed(&link_id)) {
+    if ((imnodes_IsLinkHovered(&link_id) && key_pressed(KEY_CODE_DELETE)) || imnodes_IsLinkDestroyed(&link_id)) {
         sequencer_remove_link(sequencer, link_id);
     }
-
     ui_window_end();
 }
 
