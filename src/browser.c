@@ -151,7 +151,7 @@ static void object_browser_render_tree(ObjectBrowser* browser) {
                 Object* object = browser->catalog.objects + i;
 
                 char object_name[128] = { 0 };
-                sprintf(object_name, "%llu (%s)", object->designation.index,
+                sprintf(object_name, "%lu (%s)", object->designation.index,
                         catalog_string(object->designation.catalog));
 
                 // Check if search matches
@@ -240,7 +240,7 @@ static void object_browser_render_properties_planet(Planet* planet) {
     }
 }
 
-static void object_browser_render_properties_object(ObjectBrowser* browser, Object* object) {
+static void object_browser_render_properties_object(Object* object) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
         ui_note("Designation");
         ui_property_text_readonly("Catalog", catalog_string(object->designation.catalog));
@@ -296,7 +296,7 @@ static void object_browser_render_properties(ObjectBrowser* browser) {
     if (browser->selected.classification == CLASSIFICATION_PLANET) {
         object_browser_render_properties_planet(browser->selected.planet);
     } else {
-        object_browser_render_properties_object(browser, browser->selected.object);
+        object_browser_render_properties_object(browser->selected.object);
     }
 
     ui_window_end();

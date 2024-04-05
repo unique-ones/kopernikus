@@ -34,7 +34,6 @@
 
 
 static const char *SEQUENCE_NODE_POPUP_ID = "##CreateSequenceNode";
-static const char *SEQUENCE_NODE_MESSAGE_POPUP_ID = "##CreateSequenceNodeMessage";
 
 /// Create a new sequence node
 SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackData *data) {
@@ -196,7 +195,7 @@ static void sequencer_render_node_track(SequenceNode *node) {
         Object *object = entry->object;
 
         char object_name[128] = { 0 };
-        sprintf(object_name, "%llu (%s)", object->designation.index, catalog_string(object->designation.catalog));
+        sprintf(object_name, "%lu (%s)", object->designation.index, catalog_string(object->designation.catalog));
         ui_property_text_readonly("Object", object_name);
     }
     ui_item_width_end();
