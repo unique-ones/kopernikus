@@ -22,10 +22,54 @@
 // SOFTWARE.
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "gpu.h"
+#include "libcore/gpu.h"
 #include "log.h"
-#include "string.h"
+
+// ===================================================================================
+// SHADER SOURCE MACRO HELPERS
+// ===================================================================================
+
+#define SHADER_VERSION "#version 450 core\n"
+#define DEFINE_SHADER_VARIABLE_IMPL(type, name) static type name
+#define DEFINE_SHADER_VARIABLE(type, name) DEFINE_SHADER_VARIABLE_IMPL(type, name)
+#define DEFINE_SHADER_IMPL(type, source) DEFINE_SHADER_VARIABLE(const char *, type) = SHADER_VERSION #source
+#define DEFINE_SHADER(type, source) DEFINE_SHADER_IMPL(type, source)
+
+// ===================================================================================
+// VERTEX SHADER SOURCE
+// ===================================================================================
+
+// clang-format off
+DEFINE_SHADER(SHADER_VERTEX,
+layout(location = 0) in vec2 attrib_position;
+layout(location = 1) in vec3 attrib_color;
+layout(location = 0) out vec3 passed_color;
+
+// matrix for transforming vertex
+uniform mat4 uniform_transform;
+
+void main() {
+    gl_Position = uniform_transform * vec4(attrib_position, 0.0, 1.0);
+    passed_color = attrib_color;
+});
+// clang-format on
+
+// ===================================================================================
+// FRAGMENT SHADER SOURCE
+// ===================================================================================
+
+// clang-format off
+DEFINE_SHADER(SHADER_FRAGMENT,
+layout(location = 0) out vec4 output_color;
+layout(location = 0) in vec3 passed_color;
+
+void main() { 
+    output_color = vec4(passed_color, 1.0);
+});
+// clang-format on
 
 // ===================================================================================
 // SHADER
@@ -390,4 +434,258 @@ void vertex_array_bind(VertexArray *self) {
 /// Unbinds the currently bound vertex array
 void vertex_array_unbind(void) {
     glBindVertexArray(0);
+}
+
+/// Creates a frame buffer of specified size
+b8 frame_buffer_create(FrameBuffer *self, FrameBufferInfo *spec) {
+    self->handle = 0;
+    self->texture_handle = 0;
+    self->render_handle = 0;
+    self->spec = *spec;
+    return frame_buffer_invalidate(self);
+}
+
+/// Destroys the frame buffer
+void frame_buffer_destroy(FrameBuffer *self) {
+    glDeleteFramebuffers(1, &self->handle);
+    glDeleteTextures(1, &self->texture_handle);
+    glDeleteRenderbuffers(1, &self->render_handle);
+}
+
+/// Checks if the frame buffer is complete
+static b8 frame_buffer_is_valid(FrameBuffer *buffer) {
+    frame_buffer_bind(buffer);
+    return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+}
+
+/// Invalidates the frame buffer, this needs to be called whenever the frame buffer is resized
+b8 frame_buffer_invalidate(FrameBuffer *self) {
+    if (self->handle) {
+        glDeleteFramebuffers(1, &self->handle);
+        glDeleteTextures(1, &self->texture_handle);
+        glDeleteRenderbuffers(1, &self->render_handle);
+    }
+
+    glGenFramebuffers(1, &self->handle);
+    glBindFramebuffer(GL_FRAMEBUFFER, self->handle);
+
+    glGenTextures(1, &self->texture_handle);
+    glBindTexture(GL_TEXTURE_2D, self->texture_handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, self->spec.internal_format, self->spec.width, self->spec.height, 0,
+                 self->spec.pixel_format, self->spec.pixel_type, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, self->texture_handle, 0);
+
+    glGenRenderbuffers(1, &self->render_handle);
+    glBindRenderbuffer(GL_RENDERBUFFER, self->render_handle);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, self->spec.width, self->spec.height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, self->render_handle);
+
+    if (!frame_buffer_is_valid(self)) {
+        flogf(stderr, "[framebuffer] invalid frame buffer\n");
+        return false;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return true;
+}
+
+/// Resizes the frame buffer
+b8 frame_buffer_resize(FrameBuffer *self, s32 width, s32 height) {
+    if (width <= 0 || height <= 0 || (width == self->spec.width && height == self->spec.height)) {
+        return false;
+    }
+    self->spec.width = width;
+    self->spec.height = height;
+    return frame_buffer_invalidate(self);
+}
+
+/// Binds the specified frame buffer for rendering
+void frame_buffer_bind(FrameBuffer *self) {
+    glBindFramebuffer(GL_FRAMEBUFFER, self->handle);
+    glViewport(0, 0, self->spec.width, self->spec.height);
+}
+
+/// Binds the texture of the frame buffer at the specified sampler slot
+void frame_buffer_bind_texture(FrameBuffer *self, u32 slot) {
+    glBindTextureUnit(slot, self->texture_handle);
+}
+
+/// Unbinds the currently bound frame buffer
+void frame_buffer_unbind(void) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+/// Creates a new render command
+RenderCommand *render_command_new(MemoryArena *arena, Vertex *vertices, Index *indices) {
+    RenderCommand *self = (RenderCommand *) memory_arena_alloc(arena, sizeof(RenderCommand));
+    self->previous = nil;
+    self->next = nil;
+    memcpy(self->vertices, vertices, sizeof self->vertices);
+    memcpy(self->indices, indices, sizeof self->indices);
+    return self;
+}
+
+/// Creates a new render group
+void render_group_create(RenderGroup *self) {
+    self->begin = nil;
+    self->end = nil;
+    self->commands = 0;
+    self->command_memory = memory_arena_identity(ALIGNMENT8);
+
+    vertex_array_create(&self->vertex_array);
+    vertex_buffer_create(&self->vertex_buffer);
+    index_buffer_create(&self->index_buffer);
+
+    /// Attributes are `attrib_position` and `attrib_color`
+    static ShaderType attributes[] = { FLOAT2, FLOAT3 };
+    static VertexBufferLayout layout = { .attributes = attributes, .count = ARRAY_SIZE(attributes) };
+
+    vertex_buffer_layout(&self->vertex_buffer, &layout);
+    vertex_array_vertex_buffer(&self->vertex_array, &self->vertex_buffer);
+    vertex_array_index_buffer(&self->vertex_array, &self->index_buffer);
+}
+
+/// Destroys the specified render group (i.e. delete the commands and free memory)
+void render_group_destroy(RenderGroup *self) {
+    render_group_clear(self);
+    index_buffer_destroy(&self->index_buffer);
+    vertex_buffer_destroy(&self->vertex_buffer);
+    vertex_array_destroy(&self->vertex_array);
+}
+
+/// Clears the specified render group (i.e. deletes the commands)
+void render_group_clear(RenderGroup *self) {
+    self->begin = nil;
+    self->end = nil;
+    self->commands = 0;
+    memory_arena_destroy(&self->command_memory);
+    self->command_memory = memory_arena_identity(ALIGNMENT8);
+}
+
+/// Pushes a set of vertices and indices to the render group
+void render_group_push(RenderGroup *self, Vertex *vertices, Index *indices) {
+    RenderCommand *command = render_command_new(&self->command_memory, vertices, indices);
+    if (self->begin == nil) {
+        self->begin = command;
+        self->end = command;
+        self->commands++;
+        return;
+    }
+
+    self->end->next = command;
+    command->previous = self->end;
+    self->end = command;
+    self->commands++;
+}
+
+/// Submits an actual indexed OpenGL draw call to the GPU
+static void renderer_draw_indexed(VertexArray *vertex_array, Shader *shader, u32 mode) {
+    vertex_array_bind(vertex_array);
+    shader_bind(shader);
+    glDrawElements(mode, (s32) vertex_array->index_buffer->count, GL_UNSIGNED_INT, NULL);
+    vertex_array_unbind();
+}
+
+/// Clears the currently bound frame buffer
+void renderer_clear(void) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+/// Sets the clear color
+void renderer_clear_color(Vector4f *color) {
+    glClearColor(color->x, color->y, color->z, color->w);
+}
+
+/// Creates a new renderer and initializes its pipeline
+void renderer_create(Renderer *self, f32 width, f32 height) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    shader_create(&self->shader, SHADER_VERTEX, SHADER_FRAGMENT);
+    render_group_create(&self->group);
+
+    FrameBufferInfo info = { 0 };
+    info.width = width;
+    info.height = height;
+    info.internal_format = GL_RGBA16F;
+    info.pixel_type = GL_FLOAT;
+    info.pixel_format = GL_RGB;
+
+    frame_buffer_create(&self->capture, &info);
+}
+
+/// Destroys the specified renderer
+void renderer_destroy(Renderer *self) {
+    shader_destroy(&self->shader);
+    render_group_destroy(&self->group);
+    frame_buffer_destroy(&self->capture);
+}
+
+/// Begins a renderer batch by resetting all render groups
+void renderer_begin_batch(Renderer *self) {
+    render_group_clear(&self->group);
+}
+
+/// Submits the specified render group and issues an indexed draw call
+static void render_group_submit(RenderGroup *group, Shader *shader) {
+    if (group->commands == 0) {
+        return;
+    }
+
+    usize vertices_size = RENDERER_QUAD_VERTICES * sizeof(Vertex);
+    usize indices_size = RENDERER_QUAD_INDICES * sizeof(Index);
+    Vertex *vertices = (Vertex *) memory_arena_alloc(&group->command_memory, vertices_size * group->commands);
+    Index *indices = (Index *) memory_arena_alloc(&group->command_memory, indices_size * group->commands);
+
+    usize insert_index = 0;
+    for (RenderCommand *it = group->begin; it != NULL; it = it->next) {
+        memcpy((u8 *) vertices + (ptrdiff_t) (vertices_size * insert_index), it->vertices, vertices_size);
+        memcpy((u8 *) indices + (ptrdiff_t) (indices_size * insert_index), it->indices, indices_size);
+        insert_index++;
+    }
+
+    vertex_buffer_data(&group->vertex_buffer, vertices, group->commands * vertices_size);
+    index_buffer_data(&group->index_buffer, indices, group->commands * RENDERER_QUAD_INDICES);
+    renderer_draw_indexed(&group->vertex_array, shader, GL_TRIANGLES);
+}
+
+/// Ends a renderer batch by submitting the commands of all render groups
+void renderer_end_batch(Renderer *self) {
+    render_group_submit(&self->group, &self->shader);
+}
+
+/// Indicate to the renderer that a resize is necessary
+void renderer_resize(Renderer *self, s32 width, s32 height) {
+    Matrix4x4f orthogonal;
+    matrix4x4f_create_orthogonal(&orthogonal, 0.0f, (f32) width, (f32) height, 0.0f);
+    shader_uniform_matrix4x4f(&self->shader, "uniform_transform", &orthogonal);
+
+    // frame buffer requires resize
+    frame_buffer_resize(&self->capture, width, height);
+}
+
+/// Draws a quad at the given position
+void renderer_draw_quad(Renderer *self, Vector2f *position, Vector2f *size, Vector3f *color) {
+    Vertex vertices[] = { { .position = { position->x, position->y }, .color = *color },
+                          { .position = { position->x, position->y + size->y }, .color = *color },
+                          { .position = { position->x + size->x, position->y + size->y }, .color = *color },
+                          { .position = { position->x + size->x, position->y }, .color = *color } };
+
+    u32 index_offset = self->group.commands * 4;
+    Index indices[] = { 0 + index_offset, 1 + index_offset, 2 + index_offset,
+                        2 + index_offset, 0 + index_offset, 3 + index_offset };
+    render_group_push(&self->group, vertices, indices);
+}
+
+/// Captures all following draw commands into a frame buffer
+void renderer_begin_capture(Renderer *self) {
+    frame_buffer_bind(&self->capture);
+}
+
+/// Ends the capture of draw commands
+void renderer_end_capture(Renderer *self) {
+    frame_buffer_unbind();
 }

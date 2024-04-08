@@ -1,7 +1,5 @@
 //
-// MIT License
-//
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,65 +19,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#ifndef KOPERNIKUS_MATH_H
+#define KOPERNIKUS_MATH_H
 
-#include <glad/glad.h>
-#include <inttypes.h>
-#include <solaris/types.h>
-#include "solaris/time.h"
+#include "types.h"
 
-typedef float f32;
+/// Creates an identity matrix
+/// @param self The matrix handle
+void matrix4x4f_create_identity(Matrix4x4f *self);
 
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
+/// Creates an orthogonal projection matrix
+/// @param self The matrix handle
+/// @param left The left coordinate of the orthogonal frustum
+/// @param right The right coordinate of the orthogonal frustum
+/// @param bottom The bottom coordinate of the orthogonal frustum
+/// @param top The top coordinate of the orthogonal frustum
+void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
 
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
-
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
-
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
-
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
-
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-typedef struct Duration {
-    f64 amount;
-    TimeUnit unit;
-} Duration;
-
-#endif// CORE_TYPES_H
+#endif// KOPERNIKUS_MATH_H

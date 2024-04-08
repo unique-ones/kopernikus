@@ -360,6 +360,11 @@ void ui_property_text_readonly(const char *property, const char *text) {
     igInputText(property, (char *) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
 }
 
+/// Draw a number property
+b8 ui_property_number(const char *property, s64 *x, const char *fmt) {
+    return igInputScalar(property, ImGuiDataType_S64, x, nil, nil, fmt, ImGuiInputTextFlags_None);
+}
+
 /// Draw a readonly text property
 void ui_property_number_readonly(const char *property, s64 x, const char *fmt) {
     igInputScalar(property, ImGuiDataType_S64, &x, nil, nil, fmt, ImGuiInputTextFlags_ReadOnly);

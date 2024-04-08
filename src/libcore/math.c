@@ -1,7 +1,5 @@
 //
-// MIT License
-//
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,65 +19,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#include "math.h"
 
-#include <glad/glad.h>
-#include <inttypes.h>
-#include <solaris/types.h>
-#include "solaris/time.h"
+/// Creates an identity matrix
+void matrix4x4f_create_identity(Matrix4x4f *self) {
+    self->value[0].x = 1.0f;
+    self->value[0].y = 0.0f;
+    self->value[0].z = 0.0f;
+    self->value[0].w = 0.0f;
+    self->value[1].x = 0.0f;
+    self->value[1].y = 1.0f;
+    self->value[1].z = 0.0f;
+    self->value[1].w = 0.0f;
+    self->value[2].x = 0.0f;
+    self->value[2].y = 0.0f;
+    self->value[2].z = 1.0f;
+    self->value[2].w = 0.0f;
+    self->value[3].x = 0.0f;
+    self->value[3].y = 0.0f;
+    self->value[3].z = 0.0f;
+    self->value[3].w = 1.0f;
+}
 
-typedef float f32;
-
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
-
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
-
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
-
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
-
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
-
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-typedef struct Duration {
-    f64 amount;
-    TimeUnit unit;
-} Duration;
-
-#endif// CORE_TYPES_H
+/// Creates an orthogonal projection matrix
+void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top) {
+    matrix4x4f_create_identity(self);
+    self->value[0].x = 2.0f / (right - left);
+    self->value[1].y = 2.0f / (top - bottom);
+    self->value[2].z = -1.0f;
+    self->value[3].x = -(right + left) / (right - left);
+    self->value[3].y = -(top + bottom) / (top - bottom);
+}

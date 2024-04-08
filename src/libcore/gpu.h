@@ -24,15 +24,25 @@
 #ifndef CORE_GPU_H
 #define CORE_GPU_H
 
-#include "types.h"
+#include "math.h"
+#include "string.h"
+
 
 // ===================================================================================
 // GPU relevant data types
 // ===================================================================================
 
 typedef struct Vertex {
-    Vector4f position;
+    Vector2f position;
+    Vector3f color;
 } Vertex;
+
+typedef u32 Index;
+
+enum {
+    RENDERER_QUAD_VERTICES = 4,
+    RENDERER_QUAD_INDICES = 6
+};
 
 // ===================================================================================
 // SHADER
@@ -47,117 +57,127 @@ typedef struct Shader {
 /// @param vertex path to the vertex shader
 /// @param fragment path to the fragment shader
 /// @return b8
-b8 shader_create(Shader* self, const char* vertex, const char* fragment);
+b8 shader_create(Shader *self, const char *vertex, const char *fragment);
 
 /// Destroys the specified shader
 /// @param self shader handle
-void shader_destroy(Shader* self);
+void shader_destroy(Shader *self);
 
 /// Sets a sampler2d (texture) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param slot sampler slot for the texture
-void shader_uniform_sampler(Shader* self, const char* name, u32 slot);
+void shader_uniform_sampler(Shader *self, const char *name, u32 slot);
 
 /// Sets an integer (s32) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_s32(Shader* self, const char* name, s32 value);
+void shader_uniform_s32(Shader *self, const char *name, s32 value);
 
 /// Sets a 2d-integer (Vector2s) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector2s(Shader* self, const char* name, Vector2s* value);
+void shader_uniform_vector2s(Shader *self, const char *name, Vector2s *value);
 
 /// Sets a 3d-integer (Vector3s) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector3s(Shader* self, const char* name, Vector3s* value);
+void shader_uniform_vector3s(Shader *self, const char *name, Vector3s *value);
 
 /// Sets a 4d-integer (Vector4s) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector4s(Shader* self, const char* name, Vector4s* value);
+void shader_uniform_vector4s(Shader *self, const char *name, Vector4s *value);
 
 /// Sets a float (f32) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_f32(Shader* self, const char* name, f32 value);
+void shader_uniform_f32(Shader *self, const char *name, f32 value);
 
 /// Sets a 2d-float (Vector2f) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector2f(Shader* self, const char* name, Vector2f* value);
+void shader_uniform_vector2f(Shader *self, const char *name, Vector2f *value);
 
 /// Sets a 3d-float (Vector3f) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector3f(Shader* self, const char* name, Vector3f* value);
+void shader_uniform_vector3f(Shader *self, const char *name, Vector3f *value);
 
 /// Sets a 4d-float (Vector4f) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_vector4f(Shader* self, const char* name, Vector4f* value);
+void shader_uniform_vector4f(Shader *self, const char *name, Vector4f *value);
 
 /// Sets a mat4 (Matrix4x4f) uniform
 /// @param self shader handle
 /// @param name uniform name
 /// @param value value
-void shader_uniform_matrix4x4f(Shader* self, const char* name, Matrix4x4f* value);
+void shader_uniform_matrix4x4f(Shader *self, const char *name, Matrix4x4f *value);
 
 /// Binds the specified shader
 /// @param self shader handle
-void shader_bind(Shader* self);
+void shader_bind(Shader *self);
 
 /// Unbinds the currently bound shader
 void shader_unbind(void);
 
-typedef enum ShaderType { INT = 0, INT2, INT3, INT4, FLOAT, FLOAT2, FLOAT3, FLOAT4, SAMPLER = INT } ShaderType;
+typedef enum ShaderType {
+    INT = 0,
+    INT2,
+    INT3,
+    INT4,
+    FLOAT,
+    FLOAT2,
+    FLOAT3,
+    FLOAT4,
+    SAMPLER = INT
+} ShaderType;
 
 // ===================================================================================
 // VERTEX BUFFER
 // ===================================================================================
 
 typedef struct VertexBufferLayout {
-    ShaderType* attributes;
+    ShaderType *attributes;
     u32 count;
 } VertexBufferLayout;
 
 typedef struct VertexBuffer {
     u32 handle;
-    VertexBufferLayout* layout;
+    VertexBufferLayout *layout;
 } VertexBuffer;
 
 /// Creates a vertex buffer on the gpu
 /// @param self buffer handle
-void vertex_buffer_create(VertexBuffer* self);
+void vertex_buffer_create(VertexBuffer *self);
 
 /// Destroys the vertex buffer
 /// @param self buffer Handle
-void vertex_buffer_destroy(VertexBuffer* self);
+void vertex_buffer_destroy(VertexBuffer *self);
 
 /// Sets the data for the specified buffer
 /// @param self self handle
 /// @param data pointer to the first element of the data
 /// @param size size in bytes
-void vertex_buffer_data(VertexBuffer* self, const void* data, u32 size);
+void vertex_buffer_data(VertexBuffer *self, const void *data, u32 size);
 
 /// Sets the attribute layout for the specified buffer
 /// @param self self handle
 /// @param layout layout handle
-void vertex_buffer_layout(VertexBuffer* self, VertexBufferLayout* layout);
+void vertex_buffer_layout(VertexBuffer *self, VertexBufferLayout *layout);
 
 /// Binds the specified buffer
 /// @param self Buffer handle
-void vertex_buffer_bind(VertexBuffer* self);
+void vertex_buffer_bind(VertexBuffer *self);
 
 /// Unbinds the currently bound buffer
 void vertex_buffer_unbind(void);
@@ -173,21 +193,21 @@ typedef struct IndexBuffer {
 
 /// Creates an index buffer on the gpu
 /// @param self Buffer handle
-void index_buffer_create(IndexBuffer* self);
+void index_buffer_create(IndexBuffer *self);
 
 /// Destroys the index buffer
 /// @param self Buffer Handle
-void index_buffer_destroy(IndexBuffer* self);
+void index_buffer_destroy(IndexBuffer *self);
 
 /// Sets the data for the specified buffer
 /// @param self buffer handle
 /// @param data pointer to the first index
 /// @param count number of indices
-void index_buffer_data(IndexBuffer* self, const u32* data, u32 count);
+void index_buffer_data(IndexBuffer *self, const u32 *data, u32 count);
 
 /// Binds the specified buffer
 /// @param self self handle
-void index_buffer_bind(IndexBuffer* self);
+void index_buffer_bind(IndexBuffer *self);
 
 /// Unbinds the currently bound index buffer
 void index_buffer_unbind(void);
@@ -198,33 +218,192 @@ void index_buffer_unbind(void);
 
 typedef struct VertexArray {
     u32 handle;
-    VertexBuffer* vertex_buffer;
-    IndexBuffer* index_buffer;
+    VertexBuffer *vertex_buffer;
+    IndexBuffer *index_buffer;
 } VertexArray;
 
 /// Creates a new vertex array
 /// @param self vertex array handle
-void vertex_array_create(VertexArray* self);
+void vertex_array_create(VertexArray *self);
 
 /// Destroys the specified vertex array
 /// @param self vertex array handle
-void vertex_array_destroy(VertexArray* self);
+void vertex_array_destroy(VertexArray *self);
 
 /// Sets the vertex buffer for the vertex array, this sets all the specified attributes
 /// @param self vertex array handle
 /// @param vertex_buffer vertex buffer handle
-void vertex_array_vertex_buffer(VertexArray* self, VertexBuffer* vertex_buffer);
+void vertex_array_vertex_buffer(VertexArray *self, VertexBuffer *vertex_buffer);
 
 /// Sets the index buffer for the vertex array
 /// @param self vertex array handle
 /// @param index_buffer index buffer handle
-void vertex_array_index_buffer(VertexArray* self, IndexBuffer* index_buffer);
+void vertex_array_index_buffer(VertexArray *self, IndexBuffer *index_buffer);
 
 /// Binds the specified vertex array
 /// @param self vertex array handle
-void vertex_array_bind(VertexArray* self);
+void vertex_array_bind(VertexArray *self);
 
 /// Unbinds the currently bound vertex array
 void vertex_array_unbind(void);
+
+typedef struct FrameBufferInfo {
+    s32 width;
+    s32 height;
+    s32 internal_format;
+    u32 pixel_type;
+    u32 pixel_format;
+} FrameBufferInfo;
+
+typedef struct FrameBuffer {
+    u32 handle;
+    u32 texture_handle;
+    u32 render_handle;
+    FrameBufferInfo spec;
+} FrameBuffer;
+
+/// Creates a frame buffer of specified size
+/// @param self The frame buffer handle
+/// @param spec The frame buffer specification
+/// @return A boolean value that indicates whether the frame buffer could be created
+b8 frame_buffer_create(FrameBuffer *self, FrameBufferInfo *spec);
+
+/// Destroys the frame buffer
+/// @param self The frame buffer handle
+void frame_buffer_destroy(FrameBuffer *self);
+
+/// Invalidates the frame buffer, this needs to be called whenever the frame buffer is resized
+/// @param self The frame buffer handle
+/// @return A boolean value that indicates whether the frame buffer could be invalidated
+b8 frame_buffer_invalidate(FrameBuffer *self);
+
+/// Resizes the frame buffer
+/// @param self The frame buffer handle
+/// @param width The new width
+/// @param height The new height
+/// @return A boolean value that indicates whether the frame buffer could be resized
+b8 frame_buffer_resize(FrameBuffer *self, s32 width, s32 height);
+
+/// Binds the specified frame buffer for rendering
+/// @param self The frame buffer handle
+void frame_buffer_bind(FrameBuffer *self);
+
+/// Binds the texture of the frame buffer at the specified sampler slot
+/// @param self The frame buffer handle
+/// @param slot The sampler slot
+void frame_buffer_bind_texture(FrameBuffer *self, u32 slot);
+
+/// Unbinds the currently bound frame buffer
+void frame_buffer_unbind(void);
+
+/// Forward declare rencer command
+typedef struct RenderCommand RenderCommand;
+
+/// A render command enables lazy drawing, i.e. submitting draw data
+/// without rendering it immediately. It is grouped together by a so
+/// called render group, and sent to the GPU in one batch when necessary.
+///
+/// Due to the render group being a linked list, each render command
+/// stores the previous and next command.
+typedef struct RenderCommand {
+    RenderCommand *previous;
+    RenderCommand *next;
+    Vertex vertices[RENDERER_QUAD_VERTICES];
+    Index indices[RENDERER_QUAD_INDICES];
+} RenderCommand;
+
+/// Creates a new render command
+/// @param arena The arena where the command lives in
+/// @param vertices A list of vertices, must be exactly 4
+/// @param indices A list of indices, must be exactly 6
+/// @return A new render command instance
+RenderCommand *render_command_new(MemoryArena *arena, Vertex *vertices, Index *indices);
+
+/// A render group enables the layz drawing of data. Each render
+/// group consists of a linked list of render commands, with a render
+/// command being one draw call.
+typedef struct RenderGroup {
+    /// Linked list of render commands
+    RenderCommand *begin;
+    RenderCommand *end;
+    u32 commands;
+    MemoryArena command_memory;
+
+    /// Drawing data
+    VertexArray vertex_array;
+    VertexBuffer vertex_buffer;
+    IndexBuffer index_buffer;
+} RenderGroup;
+
+/// Creates a new render group
+/// @param arena The arena where the group lives in
+/// @return A new render group
+void render_group_create(RenderGroup *self);
+
+/// Destroys the specified render group (i.e. delete the commands and free memory)
+/// @param self The render group handle
+void render_group_destroy(RenderGroup *self);
+
+/// Clears the specified render group (i.e. deletes the commands)
+/// @param self The render group handle
+void render_group_clear(RenderGroup *self);
+
+/// Pushes a set of vertices and indices to the render group
+/// @param self The render group handle
+/// @param vertices The vertex data, must be exactly 4
+/// @param indices The indices data, must be exactly 6
+void render_group_push(RenderGroup *self, Vertex *vertices, Index *indices);
+
+typedef struct Renderer {
+    RenderGroup group;
+    Shader shader;
+    FrameBuffer capture;
+} Renderer;
+
+/// Clears the currently bound frame buffer
+void renderer_clear(void);
+
+/// Sets the clear color
+/// @param color The color value for clear calls
+void renderer_clear_color(Vector4f *color);
+
+/// Creates a new renderer and initializes its pipeline
+/// @param self The renderer handle
+/// @param width The intial frame buffer width
+/// @param height The initial frame buffer height
+void renderer_create(Renderer *self, f32 width, f32 height);
+
+/// Destroys the specified renderer
+/// @param self The renderer handle
+void renderer_destroy(Renderer *self);
+
+/// Begins a renderer batch by resetting all render groups
+/// @param self The renderer handle
+void renderer_begin_batch(Renderer *self);
+
+/// Ends a renderer batch by submitting the commands of all render groups
+/// @param self The renderer handle
+void renderer_end_batch(Renderer *self);
+
+/// Indicate to the renderer that a resize is necessary
+/// @param self The renderer handle
+/// @param width The new width
+/// @param height The new height
+void renderer_resize(Renderer *self, s32 width, s32 height);
+
+/// Draws a quad at the given position
+/// @param self The renderer handle
+/// @param position The position where the quad shall be drawn
+/// @param size The size of the quad
+/// @param color The color of the quad
+void renderer_draw_quad(Renderer *self, Vector2f *position, Vector2f *size, Vector3f *color);
+
+/// Captures all following draw commands into a frame buffer
+/// @param self The renderer handle
+void renderer_begin_capture(Renderer *self);
+
+/// Ends the capture of draw commands
+/// @param self The renderer handle
+void renderer_end_capture(Renderer *self);
 
 #endif// CORE_GPU_H

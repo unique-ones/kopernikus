@@ -78,7 +78,7 @@ int main(void) {
                 ui_menu_end();
             }
             if (ui_menu_begin(ICON_FA_CIRCLE_QUESTION " About")) {
-                ui_text("Copyright " ICON_FA_COPYRIGHT " 2023 Elias Engelbert Plank");
+                ui_text("Copyright " ICON_FA_COPYRIGHT " 2024 Elias Engelbert Plank");
                 ui_menu_end();
             }
             ui_main_menu_end();

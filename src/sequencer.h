@@ -24,11 +24,13 @@
 #ifndef KOPERNIKUS_SEQUENCER_H
 #define KOPERNIKUS_SEQUENCER_H
 
+#include <libcore/gpu.h>
 #include <libcore/types.h>
 
 #include "browser.h"
 
 typedef enum SequenceNodeType {
+    SEQUENCE_NODE_START,
     SEQUENCE_NODE_TRACK,
     SEQUENCE_NODE_WAIT
 } SequenceNodeType;
@@ -38,10 +40,22 @@ typedef struct Sequencer Sequencer;
 typedef struct SequenceNode SequenceNode;
 typedef struct SequenceLink SequenceLink;
 
+typedef struct SequenceNodeStartData {
+    Time time;
+} SequenceNodeStartData;
+
 typedef struct SequenceNodeTrackData {
+    /// The duration of the node
+    Duration duration;
+
     /// The object if the node is of an object related type
     ObjectEntry object;
 } SequenceNodeTrackData;
+
+typedef struct SequenceNodeWaitData {
+    /// The duration of the node
+    Duration duration;
+} SequenceNodeWaitData;
 
 typedef struct SequenceNode {
     /// The previous node in the sequence
@@ -53,37 +67,33 @@ typedef struct SequenceNode {
     /// The type of the node
     SequenceNodeType type;
 
-    /// The duration of the node
-    Duration duration;
-
-    /// The unit of the duration
-    TimeUnit unit;
-
-    /// Tracking specific data
-    SequenceNodeTrackData track;
+    union {
+        SequenceNodeStartData start;
+        SequenceNodeTrackData track;
+        SequenceNodeWaitData wait;
+    };
 
     /// The ID of the node which is required for linking
     s32 id;
 } SequenceNode;
 
+/// Create a new start sequence node
+/// @param sequencer The sequencer handle
+/// @param data The start data
+/// @return A wait sequence node that lives inside the sequencer arena
+SequenceNode *sequence_node_make_start(Sequencer *sequencer, SequenceNodeStartData *data);
 
 /// Create a new track sequence node
 /// @param sequencer The sequencer handle
-/// @param duration The duration of the node
-/// @param unit The unit of the duration of the node
 /// @param data The track data
 /// @return A track sequence node that lives inside the sequencer arena
-SequenceNode *sequence_node_make_track(Sequencer *sequencer,
-                                       Duration duration,
-                                       TimeUnit unit,
-                                       SequenceNodeTrackData *data);
+SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackData *data);
 
 /// Create a new wait sequence node
 /// @param sequencer The sequencer handle
-/// @param duration The duration of the node
-/// @param unit The unit of the duration of the node
+/// @param data The wait data
 /// @return A wait sequence node that lives inside the sequencer arena
-SequenceNode *sequence_node_make_wait(Sequencer *sequencer, Duration duration, TimeUnit unit);
+SequenceNode *sequence_node_make_wait(Sequencer *sequencer, SequenceNodeWaitData *data);
 
 typedef struct SequenceLink {
     /// The previous link in the sequence
@@ -128,6 +138,9 @@ typedef struct Sequencer {
     /// Number of links
     usize link_count;
 
+    /// Whether there is a start node
+    b8 has_start_node;
+
     /// Sequencer arena, this stores all the nodes in blocks
     MemoryArena arena;
 
@@ -139,6 +152,9 @@ typedef struct Sequencer {
 
     /// The object browser
     ObjectBrowser *browser;
+
+    /// The renderer
+    Renderer renderer;
 } Sequencer;
 
 /// Create a new sequencer

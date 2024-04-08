@@ -143,6 +143,12 @@ void ui_item_width_end(void);
 /// @param text The text
 void ui_property_text_readonly(const char *property, const char *text);
 
+/// Draw a number property
+/// @param property The property
+/// @param x The number
+/// @param fmt The format
+b8 ui_property_number(const char *property, s64 *x, const char *fmt);
+
 /// Draw a readonly number property
 /// @param property The property
 /// @param x The number
