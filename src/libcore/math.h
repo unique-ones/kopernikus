@@ -19,8 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef KOPERNIKUS_MATH_H
-#define KOPERNIKUS_MATH_H
+#ifndef CORE_MATH_H
+#define CORE_MATH_H
 
 #include "types.h"
 
@@ -36,4 +36,4 @@ void matrix4x4f_create_identity(Matrix4x4f *self);
 /// @param top The top coordinate of the orthogonal frustum
 void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
 
-#endif// KOPERNIKUS_MATH_H
+#endif// CORE_MATH_H

@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <assert.h>
-#include <string.h>
+#ifndef CORE_THREAD_H
+#define CORE_THREAD_H
+#include "../types.h"
 
-#include <libcore/string.h>
+#ifdef CORE_PLATFORM_WIN32
 
-/// Creates a nil String
-String string_nil(void) {
-    return (String){ .base = nil, .length = 0 };
-}
+typedef void *thread_t;
+typedef unsigned long (*thread_runner)(void *);
 
-/// Creates a new string instance
-String string_new(MemoryArena *arena, const char *data, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memcpy(result.base, data, length);
-    return result;
-}
+#else
 
-/// Creates a new empty String instance
-String string_new_empty(MemoryArena *arena, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memset(result.base, 0, length);
-    return result;
-}
+typedef u32 thread_t;
+typedef void *(*thread_runner)(void *);
+
+#endif
+
+/// Creates a new thread with the specified runner
+/// @param runner The runner function for the thread
+/// @param arg The argument that is passed to the runner
+/// @return A thread handle
+thread_t thread_create(thread_runner runner, void *arg);
+
+typedef struct mutex mutex_t;
+
+/// Creates a new mutex
+/// @return A new mutex
+mutex_t *mutex_new(void);
+
+/// Frees the mutex
+/// @param self The mutex handle
+void mutex_free(mutex_t *self);
+
+/// Exclusively locks the mutex
+/// @param self The mutex handle
+void mutex_lock(mutex_t *self);
+
+/// Unlocks the mutex
+/// @param self The mutex handle
+void mutex_unlock(mutex_t *self);
+
+#endif// CORE_THREAD_H

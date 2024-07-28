@@ -21,4 +21,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <libascom/alpaca.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "alpaca.h"
+#include "utils/cJSON_Helper.h"
+
+/// Creates a new alpaca connection
+void alpaca_conn_make(AlpacaConn *conn) {
+    conn->arena = memory_arena_identity(ALIGNMENT1);
+    conn->server = (String){ 0 };
+    conn->server_name = (String){ 0 };
+    conn->manufacturer = (String){ 0 };
+    conn->manufacturer_version = (String){ 0 };
+    conn->location = (String){ 0 };
+    conn->version = ALPACA_SUPPORTED_VERSION;
+}
+
+/// Destroys the specified alpaca connection
+void alpaca_conn_destroy(AlpacaConn *conn) {
+    memory_arena_destroy(&conn->arena);
+    conn->server = (String){ 0 };
+    conn->server_name = (String){ 0 };
+    conn->manufacturer = (String){ 0 };
+    conn->manufacturer_version = (String){ 0 };
+    conn->location = (String){ 0 };
+    conn->version = ALPACA_SUPPORTED_VERSION;
+}
+
+static u32 digits(u32 x) {
+    return (u32) floor(log10((f64) x)) + 1;
+}
+
+
+/// Tries to connect to the specified alpaca server
+b8 alpaca_conn_connect(AlpacaConn *conn, StringView *hostname, u32 port) {
+    u32 versions_url_length = hostname->length + digits(port) + 32;
+    String versions_url = string_new_empty(&conn->arena, versions_url_length);
+    sprintf(versions_url.base, "http://%.*s:%d/management/apiversions", (int) hostname->length, hostname->data, port);
+
+    HttpResponse versions_response = { 0 };
+    http_client_get(&versions_response, &conn->arena, versions_url.base);
+
+    cJSON *versions_json = cJSON_ParseWithLength(versions_response.body.base, versions_response.body.length);
+    cJSON_Delete(versions_json);
+
+    return false;
+}

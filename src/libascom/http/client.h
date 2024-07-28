@@ -30,12 +30,13 @@ typedef enum HttpResponseCode {
     HTTP_OK = 200,
     HTTP_BAD_REQUEST = 400,
     HTTP_NOT_FOUND = 404,
+    HTTP_INTERNAL_SERVER_ERROR = 500,
 } HttpResponseCode;
 
 /// Retrieves a string representation of the specified HTTP response code
 /// @param code The HTTP response code
 /// @return String representation of the response code
-const char* http_response_code_to_string(HttpResponseCode code);
+const char *http_response_code_to_string(HttpResponseCode code);
 
 typedef struct HttpResponse {
     String body;
@@ -47,13 +48,13 @@ typedef struct HttpResponse {
 /// @param response The HTTP response (text and code)
 /// @param arena The arena for allocating the response string
 /// @param url The HTTP url for the request
-b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url);
+b8 http_client_get(HttpResponse *response, MemoryArena *arena, const char *url);
 
 /// Performs a HTTP PUT request and retrieves the response
 /// @param response The HTTP response (text and code)
 /// @param arena The arena for allocating the response string
 /// @param url The HTTP url for the request
 /// @param data The data to send
-b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, StringView* data);
+b8 http_client_put(HttpResponse *response, MemoryArena *arena, const char *url, StringView *data);
 
 #endif// ASCOM_HTTP_CLIENT_H

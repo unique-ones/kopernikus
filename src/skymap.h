@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <assert.h>
-#include <string.h>
+#ifndef KOPERNIKUS_SKYMAP_H
+#define KOPERNIKUS_SKYMAP_H
 
-#include <libcore/string.h>
+#include <libcore/gpu.h>
+#include <solaris/solaris.h>
 
-/// Creates a nil String
-String string_nil(void) {
-    return (String){ .base = nil, .length = 0 };
-}
+#include "browser.h"
 
-/// Creates a new string instance
-String string_new(MemoryArena *arena, const char *data, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memcpy(result.base, data, length);
-    return result;
-}
+typedef struct SkyMapInfo {
+    FrameBuffer *target;
+    GlobeTree *globe;
+    Object *object;
+    Vector2f size;
+    f32 scale;
+} SkyMapInfo;
 
-/// Creates a new empty String instance
-String string_new_empty(MemoryArena *arena, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memset(result.base, 0, length);
-    return result;
-}
+/// Generates a skymap
+void skymap_generate(MemoryArena *arena, Renderer *renderer, SkyMapInfo *info);
+
+#endif// KOPERNIKUS_SKYMAP_H

@@ -23,30 +23,25 @@
 
 #include "sequencer.h"
 #include "browser.h"
-#include "libcore/gpu.h"
+#include "skymap.h"
 #include "ui.h"
 
 #include <cimgui.h>
 #include <cimnodes.h>
+#include <libcore/gpu.h>
 #include <libcore/input.h>
 #include <libcore/log.h>
+#include <solaris/arena.h>
 #include <solaris/object.h>
 #include <solaris/planet.h>
 #include <solaris/time.h>
 #include <solaris/types.h>
 
 
-/// Macro for generating a ImU32 color
-/// #define IM_COL32_R_SHIFT    0
-#define UI_COLOR32(R, G, B, A)                                                                      \
-    (((ImU32) ((A) *255.0f) << 24) | ((ImU32) ((B) *255.0f) << 16) | ((ImU32) ((G) *255.0f) << 8) | \
-     ((ImU32) ((R) *255.0f) << 0))
-
-
 static const char *SEQUENCE_NODE_POPUP_ID = "##CreateSequenceNode";
 static const f32 SEQUENCE_NODE_WIDTH = 100.0f;
-static const f32 TIMELINE_PREVIEW_WIDTH = 40.0f;
-static const f32 TIMELINE_PREVIEW_HEIGHT = 20.0f;
+static const f32 TIMELINE_PREVIEW_WIDTH = 180.0f;
+static const f32 TIMELINE_PREVIEW_HEIGHT = 90.0f;
 
 /// Create a new start sequence node
 SequenceNode *sequence_node_make_start(Sequencer *sequencer, SequenceNodeStartData *data) {
@@ -130,6 +125,7 @@ void sequencer_clear(Sequencer *sequencer) {
     sequencer->link_head = nil;
     sequencer->link_tail = nil;
     sequencer->link_count = 0;
+    sequencer->has_start_node = false;
     memory_arena_destroy(&sequencer->arena);
     sequencer->arena = memory_arena_identity(ALIGNMENT8);
 }
@@ -378,34 +374,66 @@ static void sequencer_render_nodes(Sequencer *sequencer) {
     }
 }
 
+// static SequenceNode *sequencer_find_node_by_type(Sequencer *sequencer, SequenceNodeType type) {
+//     for (SequenceNode *it = sequencer->node_head; it != nil; it = it->next) {
+//         if (it->type == type) {
+//             return it;
+//         }
+//     }
+//     return nil;
+// }
+
+// static SequenceNode *sequencer_find_node_by_id(Sequencer *sequencer, s32 id) {
+//     for (SequenceNode *it = sequencer->node_head; it != nil; it = it->next) {
+//         if (it->id == id) {
+//             return it;
+//         }
+//     }
+//     return nil;
+// }
+
+// static SequenceLink *sequencer_find_link_by_id(Sequencer *sequencer, s32 id) {
+//     for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
+//         if (it->id == id) {
+//             return it;
+//         }
+//     }
+//     return nil;
+// }
+
+// static SequenceLink *sequencer_find_link_by_edge_id(Sequencer *sequencer, s32 id) {
+//     for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
+//         if (it->origin_id == id || it->target_id == id) {
+//             return it;
+//         }
+//     }
+//     return nil;
+// }
+
+// static SequenceLink *sequencer_find_start_link(Sequencer *sequencer) {
+//     if (!sequencer->link_head) {
+//         return nil;
+//     }
+//
+//     SequenceNode *start = sequencer_find_node_by_type(sequencer, SEQUENCE_NODE_START);
+//     if (!start) {
+//         return nil;
+//     }
+//
+//     return sequencer_find_link_by_edge_id(sequencer, start->id);
+// }
+
 /// Draw the timeline
 static void sequencer_render_timeline(Sequencer *sequencer) {
     if (!ui_window_begin("Sequence Timeline", &sequencer->show_timeline)) {
         return;
     }
 
-    ui_note("Renderer test:");
+    Vector2f size = { 0 };
+    size.x = TIMELINE_PREVIEW_WIDTH;
+    size.y = TIMELINE_PREVIEW_HEIGHT;
 
-    Renderer *renderer = &sequencer->renderer;
-
-    renderer_resize(renderer, TIMELINE_PREVIEW_WIDTH, TIMELINE_PREVIEW_HEIGHT);
-    renderer_begin_capture(renderer);
-    renderer_begin_batch(renderer);
-
-    Vector2f position = { 5, 5 };
-    Vector2f size = { 10, 10 };
-    Vector3f color = { 1.0f, 1.0f, 1.0f };
-    renderer_draw_quad(renderer, &position, &size, &color);
-
-    renderer_end_batch(renderer);
-    renderer_end_capture(renderer);
-
-    ImTextureID id = (ImTextureID) (u64) renderer->capture.texture_handle;
-    f32 width = (f32) renderer->capture.spec.width;
-    f32 height = (f32) renderer->capture.spec.height;
-
-    igImage(id, (ImVec2){ width, height }, (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, (ImVec4){ 1, 1, 1, 1 },
-            (ImVec4){ 1, 0, 0, 0 });
+    // TODO: graph data structure for nodes
 
     ui_window_end();
 }

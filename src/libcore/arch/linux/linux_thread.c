@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,41 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <assert.h>
-#include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
 
-#include <libcore/string.h>
+#include <libcore/arch/thread.h>
 
-/// Creates a nil String
-String string_nil(void) {
-    return (String){ .base = nil, .length = 0 };
+/// Creates a new thread with the specified runner
+thread_t thread_create(thread_runner runner, void *arg) {
+    pthread_t thread;
+    pthread_create(&thread, NULL, runner, arg);
+    return (thread_t) thread;
 }
 
-/// Creates a new string instance
-String string_new(MemoryArena *arena, const char *data, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memcpy(result.base, data, length);
-    return result;
+typedef struct mutex {
+    pthread_mutex_t handle;
+} mutex_t;
+
+/// Creates a new mutex
+mutex_t *mutex_new(void) {
+    mutex_t *self = (mutex_t *) malloc(sizeof(mutex_t));
+    pthread_mutex_init(&self->handle, NULL);
+    return self;
 }
 
-/// Creates a new empty String instance
-String string_new_empty(MemoryArena *arena, ssize length) {
-    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
-    memset(result.base, 0, length);
-    return result;
+/// Frees the mutex
+void mutex_free(mutex_t *self) {
+    pthread_mutex_destroy(&self->handle);
+    free(self);
+}
+
+/// Exclusively locks the mutex
+void mutex_lock(mutex_t *self) {
+    pthread_mutex_lock(&self->handle);
+}
+
+/// Unlocks the mutex
+void mutex_unlock(mutex_t *self) {
+    pthread_mutex_unlock(&self->handle);
 }

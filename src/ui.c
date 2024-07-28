@@ -34,10 +34,9 @@
 #include <string.h>
 
 /// Macro for generating a ImU32 color
-/// #define IM_COL32_R_SHIFT    0
-#define UI_COLOR32(R, G, B, A)                                                                      \
-    (((ImU32) ((A) *255.0f) << 24) | ((ImU32) ((B) *255.0f) << 16) | ((ImU32) ((G) *255.0f) << 8) | \
-     ((ImU32) ((R) *255.0f) << 0))
+#define UI_COLOR32(R, G, B, A)                                                                         \
+    (((ImU32) ((A) * 255.0f) << 24) | ((ImU32) ((B) * 255.0f) << 16) | ((ImU32) ((G) * 255.0f) << 8) | \
+     ((ImU32) ((R) * 255.0f) << 0))
 
 /// Internal ID for the ImGui DockSpace
 static const char *UI_DOCK_SPACE_ID = "##KopernikusDockSpace";

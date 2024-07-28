@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include <libascom/http/client.h>
+#include <libascom/utils/cJSON.h>
 #include <libcore/display.h>
 #include <libcore/log.h>
 
@@ -29,8 +30,21 @@
 #include "sequencer.h"
 #include "ui.h"
 
-
 int main(void) {
+    MemoryArena arena = memory_arena_identity(ALIGNMENT1);
+    HttpResponse response = { 0 };
+    http_client_get(&response, &arena, "http://localhost:32323/management/apiversions");
+    fprintf(stderr, "Response: %.*s\n", (int) response.body.length, response.body.base);
+    cJSON *json = cJSON_ParseWithLength(response.body.base, response.body.length);
+    if (json) {
+        char *string = cJSON_Print(json);
+        fprintf(stderr, "JSON: %s\n", string);
+        cJSON_free(string);
+    }
+    cJSON_Delete(json);
+
+    memory_arena_destroy(&arena);
+
     Display display = { 0 };
     display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);

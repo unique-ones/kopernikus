@@ -31,7 +31,7 @@
 /// Retrieves a string representation of the specified HTTP response code
 /// @param code The HTTP response code
 /// @return String representation of the response code
-const char* http_response_code_to_string(HttpResponseCode code) {
+const char *http_response_code_to_string(HttpResponseCode code) {
     switch (code) {
         case HTTP_OK:
             return "OK";
@@ -39,14 +39,16 @@ const char* http_response_code_to_string(HttpResponseCode code) {
             return "Bad Request";
         case HTTP_NOT_FOUND:
             return "Not Found";
+        case HTTP_INTERNAL_SERVER_ERROR:
+            return "Internal Server Error";
     }
     return "";
 }
 
 /// CURL write function for the HttpClient
-static usize http_client_write(u8* content, usize size, usize member_size, StringBuffer* buffer) {
+static usize http_client_write(u8 *content, usize size, usize member_size, StringBuffer *buffer) {
     usize curl_length = size * member_size;
-    char* tmp = realloc(buffer->data, buffer->size + curl_length);
+    char *tmp = realloc(buffer->data, buffer->size + curl_length);
     ASSERT(tmp != nil, "[http] could not allocate write buffer!")
     buffer->data = tmp;
     memcpy(buffer->data + buffer->size, content, curl_length);
@@ -55,7 +57,7 @@ static usize http_client_write(u8* content, usize size, usize member_size, Strin
 }
 
 /// CURL read function for the HttpClient
-static usize http_client_read(u8* content, usize size, usize member_size, StringView* data) {
+static usize http_client_read(u8 *content, usize size, usize member_size, StringView *data) {
     usize curl_length = size * member_size;
     usize length = (data->length < curl_length) ? data->length : curl_length;
     memcpy(content, data->data, length);
@@ -65,8 +67,8 @@ static usize http_client_read(u8* content, usize size, usize member_size, String
 }
 
 /// Performs a HTTP GET request and retrieves the response
-b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url) {
-    CURL* curl = curl_easy_init();
+b8 http_client_get(HttpResponse *response, MemoryArena *arena, const char *url) {
+    CURL *curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_client_read);
     curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -93,22 +95,18 @@ b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url) 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     curl_easy_cleanup(curl);
-    *response = (HttpResponse) {
-        .code = response_code,
-        .header = header,
-        .body = body
-    };
+    *response = (HttpResponse){ .code = response_code, .header = header, .body = body };
     return true;
 }
 
 
 /// Performs a HTTP PUT request and retrieves the response
-b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, StringView* data) {
-    CURL* curl = curl_easy_init();
+b8 http_client_put(HttpResponse *response, MemoryArena *arena, const char *url, StringView *data) {
+    CURL *curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_client_read);
 
-    struct curl_slist* headers = nil;
+    struct curl_slist *headers = nil;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
@@ -138,10 +136,6 @@ b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     curl_easy_cleanup(curl);
-    *response =  (HttpResponse) {
-        .code = response_code,
-        .header = header,
-        .body = body
-    };
+    *response = (HttpResponse){ .code = response_code, .header = header, .body = body };
     return true;
 }
