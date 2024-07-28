@@ -59,7 +59,7 @@ static void ui_setup_style(void) {
 
     f32 font_size = 16.0f;
     f32 font_size_icons = 2.0f / 3.0f * font_size;
-    io->FontDefault = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/caskaydia-cove.ttf", font_size, nil, nil);
+    io->FontDefault = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/0xproto.ttf", font_size, nil, nil);
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-regular-400.ttf", font_size_icons, &icons, icons_ranges);
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-solid-900.ttf", font_size_icons, &icons, icons_ranges);
 
@@ -165,6 +165,9 @@ void ui_initialize(Display *display) {
 
     ImGui_ImplGlfw_InitForOpenGL(display->handle, true);
     ImGui_ImplOpenGL3_Init("#version 450");
+
+    igClearIniSettings();
+    igLoadIniSettingsFromDisk("data/setup.ini");
 
     imnodes_PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick |
                               ImNodesAttributeFlags_EnableLinkCreationOnSnap);

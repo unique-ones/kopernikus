@@ -10,6 +10,9 @@ target_include_directories(libascom PRIVATE "${CMAKE_SOURCE_DIR}/src/")
 
 # options for curl
 set(HTTP_ONLY ON)
+set(BUILD_CURL_EXE OFF)  # Do not build the curl executable
+set(BUILD_SHARED_LIBS OFF)  # Build static libraries to reduce number of targets
+set(CURL_DISABLE_TESTS ON)  # Disable tests to reduce the number of targets
 
 include(FetchContent)
 FetchContent_Declare(CURL GIT_REPOSITORY https://github.com/curl/curl.git)

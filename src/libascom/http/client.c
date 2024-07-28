@@ -22,6 +22,8 @@
 // SOFTWARE.
 
 #include <curl/curl.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <libascom/http/client.h>
 #include <libcore/types.h>

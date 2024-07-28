@@ -23,9 +23,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 #include "gpu.h"
-#include "libcore/gpu.h"
 #include "log.h"
 
 // ===================================================================================

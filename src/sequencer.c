@@ -234,7 +234,10 @@ static void sequencer_render_node_time_data(Duration *duration) {
     ui_property_real("Duration", &duration->amount, "%.4f");
 
     static const char *UNITS[] = { "Seconds", "Minutes", "Hours", "Days", "Months", "Years" };
-    ui_combobox("Unit", &duration->unit, UNITS, ARRAY_SIZE(UNITS));
+
+    s32 unit = duration->unit;
+    ui_combobox("Unit", &unit, UNITS, ARRAY_SIZE(UNITS));
+    duration->unit = unit;
 }
 
 /// Draw a start node
