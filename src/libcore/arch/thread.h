@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,50 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#ifndef CORE_THREAD_H
+#define CORE_THREAD_H
 
-#include "types.h"
+#include "../types.h"
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+#ifdef CORE_PLATFORM_WIN32
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+typedef void *Thread;
+typedef unsigned long (*ThreadRunner)(void *);
 
-#endif// CORE_MATH_H
+#else
+
+typedef u32 Thread;
+typedef void *(*ThreadRunner)(void *);
+
+#endif
+
+/// Creates a new thread with the specified runner
+/// @param runner The runner function for the thread
+/// @param arg The argument that is passed to the runner
+/// @return A thread handle
+Thread thread_create(ThreadRunner runner, void *arg);
+
+/// Sends the curent thread of execution to sleep for the
+/// specified time.
+/// @param milliseconds The time in milliseconds
+void thread_sleep(u64 milliseconds);
+
+typedef struct Mutex Mutex;
+
+/// Creates a new mutex
+/// @return A new mutex
+Mutex *mutex_new(void);
+
+/// Frees the mutex
+/// @param self The mutex handle
+void mutex_free(Mutex *self);
+
+/// Exclusively locks the mutex
+/// @param self The mutex handle
+void mutex_lock(Mutex *self);
+
+/// Unlocks the mutex
+/// @param self The mutex handle
+void mutex_unlock(Mutex *self);
+
+#endif// CORE_THREAD_H

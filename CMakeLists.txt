@@ -33,9 +33,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Use FetchContent
+include(FetchContent)
+
 # Add source
 add_subdirectory(src)
 
-if(EXISTS "${CMAKE_INSTALL_PREFIX}/compile_commands.json")
+if (EXISTS "${CMAKE_INSTALL_PREFIX}/compile_commands.json")
     file(CREATE_LINK "${CMAKE_INSTALL_PREFIX}/compile_commands.json" "${CMAKE_CURRENT_LIST_DIR}/compile_commands.json")
-endif()
+endif ()

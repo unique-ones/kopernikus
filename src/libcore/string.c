@@ -119,3 +119,10 @@ String string_new(MemoryArena *arena, const char *data, ssize length) {
     memcpy(result.base, data, length);
     return result;
 }
+
+/// Creates a new empty String instance
+String string_new_empty(MemoryArena *arena, ssize length) {
+    String result = { .base = (char *) memory_arena_alloc(arena, length), .length = length };
+    memset(result.base, 0, length);
+    return result;
+}

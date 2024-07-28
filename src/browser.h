@@ -26,6 +26,8 @@
 
 #include <solaris/catalog.h>
 
+#include "settings.h"
+
 typedef struct ObjectEntry {
     /// The classification is used to decide which type is stored here.
     /// If the classification is `PLANET`, then one must access the planet
@@ -68,11 +70,15 @@ typedef struct ObjectBrowser {
 
     /// This flag controls whether the object properties window is displayed
     b8 show_properties;
+
+    /// The kopernikus settings
+    Settings *settings;
 } ObjectBrowser;
 
 /// Create a new ObjectBrowser
 /// @param browser The browser
-void object_browser_make(ObjectBrowser *browser);
+/// @param settings The settings
+void object_browser_make(ObjectBrowser *browser, Settings *settings);
 
 /// Destroys the ObjectBrowser
 /// @param browser The browser

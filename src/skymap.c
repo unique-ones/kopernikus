@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#include "skymap.h"
 
-#include "types.h"
+/// Generates a skymap
+void skymap_generate(MemoryArena const *arena, Renderer *renderer, SkyMapInfo const *info) {
+    frame_buffer_bind(info->target);
+    renderer_begin_batch(renderer);
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+    // TODO(elias): once we have GlobeTree again, fill this somehow
+    (void) arena;
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+    // Determine the render extent
+    Vector2f extent = { 0 };
+    extent.x = info->size.x * info->scale;
+    extent.y = info->size.y * info->scale;
+    renderer_resize(renderer, (s32) extent.x, (s32) extent.y);
 
-#endif// CORE_MATH_H
+    renderer_clear_color(&(Vector4f) { 0 });
+    renderer_clear();
+
+    renderer_end_batch(renderer);
+    frame_buffer_unbind();
+}

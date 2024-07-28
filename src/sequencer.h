@@ -42,6 +42,7 @@ typedef struct SequenceLink SequenceLink;
 
 typedef struct SequenceNodeStartData {
     Time time;
+    b8 now;
 } SequenceNodeStartData;
 
 typedef struct SequenceNodeTrackData {
@@ -73,8 +74,14 @@ typedef struct SequenceNode {
         SequenceNodeWaitData wait;
     };
 
-    /// The ID of the node which is required for linking
+    /// The ID of the node
     s32 id;
+
+    /// The ID of the previous pin
+    s32 previous_id;
+
+    /// The ID of the next pin
+    s32 next_id;
 } SequenceNode;
 
 /// Create a new start sequence node
@@ -102,11 +109,11 @@ typedef struct SequenceLink {
     /// The next link in the sequence
     SequenceLink *next;
 
-    /// The origin ID, which resembles the ID of the origin node where the link starts
-    s32 origin_id;
+    /// The origin ID, which resembles the pin ID of the node where the link starts
+    s32 from;
 
-    /// The target ID, which resembles the ID of the target node where the link points to
-    s32 target_id;
+    /// The target ID, which resembles the pin ID of the node where the link points to
+    s32 to;
 
     /// The id of the link itself
     s32 id;
@@ -114,10 +121,10 @@ typedef struct SequenceLink {
 
 /// Create a new link instance
 /// @param sequencer The sequencer handle
-/// @param origin_id The ID of the origin node
-/// @param target_id The ID of the target node
+/// @param from The ID of the origin node
+/// @param to The ID of the target node
 /// @return A link that lives inside the sequencer arena
-SequenceLink *sequence_link_make(Sequencer *sequencer, s32 origin_id, s32 target_id);
+SequenceLink *sequence_link_make(Sequencer *sequencer, s32 from, s32 to);
 
 typedef struct Sequencer {
     /// Start of the node sequence
@@ -143,6 +150,9 @@ typedef struct Sequencer {
 
     /// Sequencer arena, this stores all the nodes in blocks
     MemoryArena arena;
+
+    /// Position arena that gets cleared every frame
+    MemoryArena position_arena;
 
     /// This flag controls whether the sequencer node editor is displayed
     b8 show_editor;

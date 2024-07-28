@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#include <stdio.h>
 
-#include "types.h"
+#include "url.h"
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+/// Builds the path URL for the specified base URL using the provided buffer
+static usize alpaca_make_path_url_internal(StringView *base, const char *path, String *buffer) {
+    const char *fmt = "%.*s/%s";
+    return snprintf(buffer->base, buffer->length, fmt, base->length, base->data, path);
+}
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
-
-#endif// CORE_MATH_H
+/// Builds the path URL for the specified base URL using memory from the provided arena
+void alpaca_make_path_url(StringView *base, MemoryArena *arena, String *url, const char *path) {
+    String empty = { 0 };
+    usize length = alpaca_make_path_url_internal(base, path, &empty);
+    *url = string_new_empty(arena, length + 1);
+    alpaca_make_path_url_internal(base, path, url);
+}

@@ -172,16 +172,27 @@ void ui_property_real_readonly(const char *property, f64 x, const char *fmt);
 /// @param buffer The search buffer
 /// @param label The label
 /// @param placeholder The placeholder
+/// @param full_width Specifies if the searchbar should occupy full width
 /// @return A boolean value that indicates whether the input changed
-b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder);
+b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder, b8 full_width);
 
 /// Draw a combobox
-/// @param The title of the combobox
+/// @param title The title of the combobox
 /// @param selected The index of the selected item
 /// @param items The items
 /// @param length The number of items
 /// @return A boolean value that indicates whether the input changed
 b8 ui_combobox(const char *title, s32 *selected, const char **items, usize length);
+
+/// Draws a button
+/// @param label The button label
+/// @param full_width Specifies if the button should ocupy full width
+b8 ui_button(const char *label, b8 full_width);
+
+/// Draws a light and colorful button
+/// @param label The button label
+/// @param full_width Specifies if the button should ocupy full width
+b8 ui_button_light(const char *label, b8 full_width);
 
 // ===================================================================================
 // UI tree
@@ -269,6 +280,11 @@ b8 ui_hovered(void);
 
 /// Keep the current line of the UI cursor
 void ui_keep_line(void);
+
+/// Advances the draw cursor by the specified offset
+/// @param x The x offset
+/// @param y The y offset
+void ui_draw_cursor_advance(f32 x, f32 y);
 
 // ===================================================================================
 // UI icons

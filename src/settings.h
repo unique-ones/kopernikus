@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#ifndef KOPERNIKUS_SETTINGS_H
+#define KOPERNIKUS_SETTINGS_H
 
-#include "types.h"
+#include "location.h"
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+/// TODO(elias): Add serialization
+typedef struct Settings {
+    MemoryArena arena;
+    GeoLocation location;
+} Settings;
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+/// Initializes the settings
+/// @param settings The settings
+/// @note Tries to fetch the location of the observer
+///       from the internet.
+void settings_make(Settings *settings);
 
-#endif// CORE_MATH_H
+/// Destroys the provided settings
+/// @param settings The settings
+void settings_destroy(Settings *settings);
+
+#endif// KOPERNIKUS_SETTINGS_H

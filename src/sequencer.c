@@ -22,31 +22,41 @@
 // SOFTWARE.
 
 #include "sequencer.h"
+
+#include <assert.h>
+
 #include "browser.h"
-#include "libcore/gpu.h"
+#include "skymap.h"
 #include "ui.h"
 
 #include <cimgui.h>
 #include <cimnodes.h>
+#include <cimplot.h>
+#include <libcore/gpu.h>
 #include <libcore/input.h>
 #include <libcore/log.h>
+#include <solaris/arena.h>
 #include <solaris/object.h>
 #include <solaris/planet.h>
 #include <solaris/time.h>
 #include <solaris/types.h>
 
 
-/// Macro for generating a ImU32 color
-/// #define IM_COL32_R_SHIFT    0
-#define UI_COLOR32(R, G, B, A)                                                                      \
-    (((ImU32) ((A) *255.0f) << 24) | ((ImU32) ((B) *255.0f) << 16) | ((ImU32) ((G) *255.0f) << 8) | \
-     ((ImU32) ((R) *255.0f) << 0))
-
-
 static const char *SEQUENCE_NODE_POPUP_ID = "##CreateSequenceNode";
 static const f32 SEQUENCE_NODE_WIDTH = 100.0f;
-static const f32 TIMELINE_PREVIEW_WIDTH = 40.0f;
-static const f32 TIMELINE_PREVIEW_HEIGHT = 20.0f;
+static const f32 TIMELINE_PREVIEW_WIDTH = 180.0f;
+static const f32 TIMELINE_PREVIEW_HEIGHT = 90.0f;
+static u32 xorshift_state = 1337;
+
+/* The state must be initialized to non-zero */
+static u32 xorshift32() {
+    /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+    u32 x = xorshift_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return xorshift_state = x;
+}
 
 /// Create a new start sequence node
 SequenceNode *sequence_node_make_start(Sequencer *sequencer, SequenceNodeStartData *data) {
@@ -56,6 +66,8 @@ SequenceNode *sequence_node_make_start(Sequencer *sequencer, SequenceNodeStartDa
     node->type = SEQUENCE_NODE_START;
     node->start = *data;
     node->id = sequencer->node_count + 1;
+    node->previous_id = (s32) xorshift32();
+    node->next_id = (s32) xorshift32();
     return node;
 }
 
@@ -67,6 +79,8 @@ SequenceNode *sequence_node_make_track(Sequencer *sequencer, SequenceNodeTrackDa
     node->type = SEQUENCE_NODE_TRACK;
     node->track = *data;
     node->id = sequencer->node_count + 1;
+    node->previous_id = (s32) xorshift32();
+    node->next_id = (s32) xorshift32();
     return node;
 }
 
@@ -78,16 +92,18 @@ SequenceNode *sequence_node_make_wait(Sequencer *sequencer, SequenceNodeWaitData
     node->type = SEQUENCE_NODE_WAIT;
     node->wait = *data;
     node->id = sequencer->node_count + 1;
+    node->previous_id = (s32) xorshift32();
+    node->next_id = (s32) xorshift32();
     return node;
 }
 
 /// Create a new link instance
-SequenceLink *sequence_link_make(Sequencer *sequencer, s32 origin_id, s32 target_id) {
+SequenceLink *sequence_link_make(Sequencer *sequencer, s32 from, s32 to) {
     SequenceLink *link = (SequenceLink *) memory_arena_alloc(&sequencer->arena, sizeof(SequenceNode));
     link->previous = nil;
     link->next = nil;
-    link->origin_id = origin_id;
-    link->target_id = target_id;
+    link->from = from;
+    link->to = to;
     link->id = 0xFFFF + sequencer->link_count + 1;
     return link;
 }
@@ -102,6 +118,7 @@ void sequencer_make(Sequencer *sequencer, ObjectBrowser *browser) {
     sequencer->link_count = 0;
     sequencer->has_start_node = false;
     sequencer->arena = memory_arena_identity(ALIGNMENT8);
+    sequencer->position_arena = memory_arena_identity(ALIGNMENT1);
     sequencer->show_editor = true;
     sequencer->show_timeline = true;
     sequencer->browser = browser;
@@ -118,6 +135,7 @@ void sequencer_destroy(Sequencer *sequencer) {
     sequencer->link_head = nil;
     sequencer->link_tail = nil;
     sequencer->link_count = 0;
+    memory_arena_destroy(&sequencer->position_arena);
     memory_arena_destroy(&sequencer->arena);
     renderer_destroy(&sequencer->renderer);
 }
@@ -130,6 +148,7 @@ void sequencer_clear(Sequencer *sequencer) {
     sequencer->link_head = nil;
     sequencer->link_tail = nil;
     sequencer->link_count = 0;
+    sequencer->has_start_node = false;
     memory_arena_destroy(&sequencer->arena);
     sequencer->arena = memory_arena_identity(ALIGNMENT8);
 }
@@ -213,7 +232,7 @@ void sequencer_remove_link(Sequencer *sequencer, s32 link_id) {
 /// Remove a link by a node ID
 void sequencer_remove_link_by_node(Sequencer *sequencer, s32 node_id) {
     for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
-        if (it->origin_id == node_id || it->target_id == node_id) {
+        if (it->from == node_id || it->to == node_id) {
             if (it->previous != nil) {
                 it->previous->next = it->next;
             } else {
@@ -246,9 +265,19 @@ static void sequencer_render_node_start(SequenceNode *node, f32 width) {
     ui_text(ICON_FA_PLAY " Start");
     imnodes_EndNodeTitleBar();
 
-    imnodes_BeginOutputAttribute(node->id, ImNodesPinShape_Circle);
+    imnodes_BeginOutputAttribute(node->next_id, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
+
+    bool use_current_time = node->start.now;
+    igCheckbox("Use current time", &use_current_time);
+    node->start.now = use_current_time;
+
+    Time now = time_now();
+    if (use_current_time) {
+        node->start.time = now;
+        return;
+    }
 
     b8 date_changed = false;
     Time validation = node->start.time;
@@ -256,7 +285,7 @@ static void sequencer_render_node_start(SequenceNode *node, f32 width) {
     ImGuiStyle *style = igGetStyle();
     ImVec2 item_spacing = style->ItemSpacing;
     ui_item_width_begin(width / 2.0f - style->ItemSpacing.x);
-    igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (const ImVec2){ .x = 0, .y = item_spacing.y });
+    igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (const ImVec2) { .x = 0, .y = item_spacing.y });
     date_changed |= ui_property_number("##Day", &validation.day, "%d");
     ui_keep_line();
     ui_note(".");
@@ -267,7 +296,7 @@ static void sequencer_render_node_start(SequenceNode *node, f32 width) {
     ui_keep_line();
     date_changed |= ui_property_number("##Year", &validation.year, "%d");
 
-    igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (const ImVec2){ .x = item_spacing.x, .y = item_spacing.y });
+    igPushStyleVar_Vec2(ImGuiStyleVar_ItemSpacing, (const ImVec2) { .x = item_spacing.x, .y = item_spacing.y });
     ui_keep_line();
     ui_text("Date");
     igPopStyleVar(1);
@@ -289,6 +318,9 @@ static void sequencer_render_node_start(SequenceNode *node, f32 width) {
     if (date_changed && time_valid(&validation)) {
         node->start.time = validation;
     }
+    if (time_lt(&node->start.time, &now)) {
+        node->start.time = now;
+    }
 }
 
 /// Draw a track node
@@ -297,11 +329,11 @@ static void sequencer_render_node_track(SequenceNode *node, f32 width) {
     ui_text(ICON_FA_CROSSHAIRS " Track");
     imnodes_EndNodeTitleBar();
 
-    imnodes_BeginInputAttribute(node->id << 8, ImNodesPinShape_Circle);
+    imnodes_BeginInputAttribute(node->previous_id, ImNodesPinShape_Circle);
     ui_text("Previous\t");
     imnodes_EndInputAttribute();
     ui_keep_line();
-    imnodes_BeginOutputAttribute(node->id << 16, ImNodesPinShape_Circle);
+    imnodes_BeginOutputAttribute(node->next_id, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
 
@@ -328,11 +360,11 @@ static void sequencer_render_node_wait(SequenceNode *node, f32 width) {
     ui_text(ICON_FA_CLOCK " Wait");
     imnodes_EndNodeTitleBar();
 
-    imnodes_BeginInputAttribute(node->id << 8, ImNodesPinShape_Circle);
+    imnodes_BeginInputAttribute(node->previous_id, ImNodesPinShape_Circle);
     ui_text("Previous\t");
     imnodes_EndInputAttribute();
     ui_keep_line();
-    imnodes_BeginOutputAttribute(node->id << 16, ImNodesPinShape_Circle);
+    imnodes_BeginOutputAttribute(node->next_id, ImNodesPinShape_Circle);
     ui_text("Next");
     imnodes_EndOutputAttribute();
 
@@ -374,7 +406,245 @@ static void sequencer_render_nodes(Sequencer *sequencer) {
         sequencer_render_node(sequencer, it, SEQUENCE_NODE_WIDTH);
     }
     for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
-        imnodes_Link(it->id, it->origin_id, it->target_id);
+        imnodes_Link(it->id, it->from, it->to);
+    }
+}
+
+static SequenceNode *sequencer_find_node_by_type(Sequencer *sequencer, SequenceNodeType type) {
+    for (SequenceNode *it = sequencer->node_head; it != nil; it = it->next) {
+        if (it->type == type) {
+            return it;
+        }
+    }
+    return nil;
+}
+
+typedef struct SequenceNodeList {
+    MemoryArena arena;
+    SequenceNode **nodes;
+    usize reserved;
+    usize count;
+} SequenceNodeList;
+
+/// Reserves space inside the sequence node list
+static void sequence_node_list_reserve(SequenceNodeList *list, usize count) {
+    if (count <= list->reserved) {
+        return;
+    }
+
+    SequenceNode **temp = (SequenceNode **) memory_arena_alloc(&list->arena, sizeof(SequenceNode *) * count);
+    for (usize i = 0; i < list->count; ++i) {
+        temp[i] = list->nodes[i];
+    }
+
+    list->nodes = temp;
+    list->reserved = count;
+}
+
+/// Creates a new sequence node list
+static void sequence_node_list_make(SequenceNodeList *list) {
+    list->arena = memory_arena_identity(ALIGNMENT1);
+    list->nodes = nil;
+    list->reserved = 0;
+    list->count = 0;
+
+    sequence_node_list_reserve(list, 8);
+}
+
+/// Destroys the sequence node list
+static void sequence_node_list_destroy(SequenceNodeList *list) {
+    memory_arena_destroy(&list->arena);
+    list->nodes = nil;
+    list->count = 0;
+    list->reserved = 0;
+}
+
+/// Adds to the sequence node list
+static void sequence_node_list_add(SequenceNodeList *list, SequenceNode *node) {
+    if (list->count == list->reserved) {
+        sequence_node_list_reserve(list, list->reserved * 2);
+    }
+
+    list->nodes[list->count] = node;
+    list->count++;
+}
+
+void sequencer_format_date_time(StringBuffer *buffer, Time *time) {
+    time_t stamp = time_unix(time);
+    struct tm *time_info = localtime(&stamp);
+    strftime(buffer->data, buffer->size, "%d.%m.%Y - %H:%M:%S", time_info);// Format the time as a string
+}
+
+/// Retrieves the unit conversion factor
+static f64 unit_conversion_factor(TimeUnit from, TimeUnit to) {
+    // Conversion factors to seconds for each unit
+    static const f64 seconds_per_unit[] = {
+        1.0,      // UNIT_SECONDS
+        60.0,     // UNIT_MINUTES
+        3600.0,   // UNIT_HOURS
+        86400.0,  // UNIT_DAYS
+        2629746.0,// UNIT_MONTHS (average month in seconds)
+        31556952.0// UNIT_YEARS (average year in seconds)
+    };
+
+    // Conversion factor from 'from' unit to 'to' unit
+    return seconds_per_unit[from] / seconds_per_unit[to];
+}
+
+static void sequencer_render_timeline_node_track(Sequencer *sequencer, SequenceNodeTrackData *data, Time *start) {
+    ImVec2 inner_spacing = igGetStyle()->ItemInnerSpacing;
+    ui_draw_cursor_advance(inner_spacing.x, inner_spacing.y);
+    ui_note("Tracking");
+    ui_draw_cursor_advance(inner_spacing.x, 0);
+
+    ImVec2 available = { 0 };
+    igGetContentRegionAvail(&available);
+
+    if (!igBeginTableEx("", igGetID_Ptr(data), 3, ImGuiTableFlags_RowBg, (ImVec2) { available.x - inner_spacing.x, 0 },
+                        0)) {
+        return;
+    }
+
+    igTableSetupColumn("Timing", ImGuiTableColumnFlags_None, 0, 0);
+    igTableSetupColumn("Target", ImGuiTableColumnFlags_None, 0, 0);
+    igTableSetupColumn("Position", ImGuiTableColumnFlags_None, 0, 0);
+    igTableHeadersRow();
+
+    igTableNextRow(ImGuiTableRowFlags_None, 0);
+    igTableNextColumn();
+
+    char start_time_buffer[52] = { 0 };
+    sequencer_format_date_time(&(StringBuffer) { start_time_buffer, sizeof start_time_buffer }, start);
+    ui_property_text_readonly("Start", start_time_buffer);
+
+    Time end = *start;
+    time_add(&end, data->duration.amount, data->duration.unit);
+
+    char end_time_buffer[52] = { 0 };
+    sequencer_format_date_time(&(StringBuffer) { end_time_buffer, sizeof end_time_buffer }, &end);
+    ui_property_text_readonly("End", end_time_buffer);
+    sequencer_render_node_time_data(&data->duration);
+    igTableNextColumn();
+
+    switch (data->object.classification) {
+        case CLASSIFICATION_PLANET:
+            ui_property_text_readonly("Name", planet_string(data->object.planet->name));
+            break;
+        default: {
+            Object *object = data->object.object;
+            ui_property_text_readonly("Catalog", catalog_string(object->designation.catalog));
+            ui_property_number_readonly("Index", (s64) object->designation.index, nil);
+            ui_property_text_readonly("Type", classification_string(object->classification));
+            ui_property_text_readonly("Const", constellation_string(object->constellation));
+            break;
+        }
+    }
+
+    igTableNextColumn();
+
+    memory_arena_clear(&sequencer->position_arena);
+
+    Geographic observer = { 0 };
+    observer.latitude = sequencer->browser->settings->location.latitude;
+    observer.longitude = sequencer->browser->settings->location.longitude;
+
+    ComputeSpecification compute = { 0 };
+    compute.date = *start;
+    compute.unit = data->duration.unit > UNIT_SECONDS ? data->duration.unit - 1 : UNIT_SECONDS;
+    compute.steps = (usize) time_difference(start, &end) * unit_conversion_factor(UNIT_SECONDS, compute.unit);
+    compute.step_size = 1;
+    compute.observer = observer;
+
+    ComputeResult result = { 0 };
+    switch (data->object.classification) {
+        case CLASSIFICATION_PLANET:
+            compute_geographic_planet(&sequencer->position_arena, &result, data->object.planet, &compute);
+            break;
+        default:
+            compute_geographic_fixed(&sequencer->position_arena, &result, data->object.object, &compute);
+            break;
+    }
+
+    ImPlotFlags plot_flags = ImPlotFlags_NoFrame;
+    ImPlotAxisFlags axis_flags = ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels;
+    usize count = compute.steps;
+
+    Time now = time_now();
+    f64 now_mark = (f64) time_difference(start, &now);
+
+    ImVec4 COLOR_RED = (ImVec4) { 1.0f, 0.0f, 0.0f, 1.0f };
+    ImVec4 COLOR_GREEN = (ImVec4) { 0.0f, 1.0f, 0.0f, 1.0f };
+
+    ImVec2 plot_size = { 0 };
+    igGetContentRegionAvail(&plot_size);
+
+    char plot_title[64];
+    snprintf(plot_title, sizeof plot_title, "##idPlot%p", (void *) data);
+    if (ImPlot_BeginPlot(plot_title, plot_size, plot_flags)) {
+        ImPlot_SetupAxis(ImAxis_X1, "Seconds", axis_flags);
+        ImPlot_SetupAxis(ImAxis_Y1, "Angle", ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_Opposite);
+        ImPlot_SetupAxisFormat_Str(ImAxis_X1, "%g s");
+        ImPlot_SetupAxisFormat_Str(ImAxis_Y1, "%g °");
+        ImPlot_SetupAxesLimits(0.0, count - 1, -90.0, 360.0, ImPlotCond_Always);
+        ImPlot_TagX_Str(now_mark, (ImVec4) { 0.0f, 0.0f, 1.0f, 1.0f }, "Now");
+        ImPlot_DragLineX(0, &now_mark, (ImVec4) { 0.33f, 0.33f, 0.33f, 1.0f }, 1, 0, nil, nil, nil);
+        ImPlot_SetNextLineStyle(COLOR_RED, 1.0f);
+        ImPlot_PlotLine_doublePtrInt("azimuth(t)", result.azimuths, count, 1, 0, 0, 0, sizeof(f64));
+        ImPlot_SetNextLineStyle(COLOR_GREEN, 1.0f);
+        ImPlot_PlotLine_doublePtrInt("altitude(t)", result.altitudes, count, 1, 0, 0, 0, sizeof(f64));
+        ImPlot_EndPlot();
+    }
+
+    igEndTable();
+}
+
+/// Draw the timeline node
+static Duration *sequencer_render_timeline_node(Sequencer *sequencer, SequenceNode *node, Time *start) {
+    if (node->type == SEQUENCE_NODE_START) {
+        return nil;
+    }
+    if (node->type == SEQUENCE_NODE_WAIT) {
+        return &node->wait.duration;
+    }
+
+    ImVec2 size = { 0 };
+    igGetContentRegionAvail(&size);
+    size.y = TIMELINE_PREVIEW_HEIGHT * 2;
+
+    if (igBeginChild_ID(node->id, size, false, ImGuiWindowFlags_NoScrollbar)) {
+        sequencer_render_timeline_node_track(sequencer, &node->track, start);
+        igEndChild();
+    }
+
+    return &node->track.duration;
+}
+
+static void sequencer_build_node_list(Sequencer *sequencer, SequenceNodeList *list) {
+    SequenceNode *node = sequencer_find_node_by_type(sequencer, SEQUENCE_NODE_START);
+    if (node == nil) {
+        return;
+    }
+
+    while (node != nil) {
+        sequence_node_list_add(list, node);
+
+        SequenceLink *next = nil;
+        for (SequenceLink *it = sequencer->link_head; it != nil; it = it->next) {
+            if (it->from == node->next_id) {
+                next = it;
+                break;
+            }
+        }
+
+        if (next == nil) {
+            break;
+        }
+
+        for (node = sequencer->node_head; node != nil; node = node->next) {
+            if (node->previous_id == next->to) {
+                break;
+            }
+        }
     }
 }
 
@@ -384,29 +654,23 @@ static void sequencer_render_timeline(Sequencer *sequencer) {
         return;
     }
 
-    ui_note("Renderer test:");
+    SequenceNodeList nodes = { 0 };
+    sequence_node_list_make(&nodes);
+    sequencer_build_node_list(sequencer, &nodes);
 
-    Renderer *renderer = &sequencer->renderer;
+    Time start = { 0 };
+    for (usize i = 0; i < nodes.count; ++i) {
+        SequenceNode *node = nodes.nodes[i];
+        if (node->type == SEQUENCE_NODE_START) {
+            start = node->start.time;
+        }
+        Duration *duration = sequencer_render_timeline_node(sequencer, node, &start);
+        if (duration != nil) {
+            time_add(&start, duration->amount, duration->unit);
+        }
+    }
 
-    renderer_resize(renderer, TIMELINE_PREVIEW_WIDTH, TIMELINE_PREVIEW_HEIGHT);
-    renderer_begin_capture(renderer);
-    renderer_begin_batch(renderer);
-
-    Vector2f position = { 5, 5 };
-    Vector2f size = { 10, 10 };
-    Vector3f color = { 1.0f, 1.0f, 1.0f };
-    renderer_draw_quad(renderer, &position, &size, &color);
-
-    renderer_end_batch(renderer);
-    renderer_end_capture(renderer);
-
-    ImTextureRef texture_ref = { 0 };
-    texture_ref._TexID = (u64) renderer->capture.texture_handle;
-
-    f32 const width = (f32) renderer->capture.spec.width;
-    f32 const height = (f32) renderer->capture.spec.height;
-
-    igImage(texture_ref, (ImVec2){ width, height }, (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 });
+    sequence_node_list_destroy(&nodes);
     ui_window_end();
 }
 
@@ -460,7 +724,7 @@ static void sequencer_render_editor(Sequencer *sequencer) {
             sequencer_emplace_node(sequencer, node);
         }
         ui_separator();
-        igPushStyleColor_Vec4(ImGuiCol_Text, (ImVec4){ 1.0f, 0.0f, 0.2f, 1.0f });
+        igPushStyleColor_Vec4(ImGuiCol_Text, (ImVec4) { 1.0f, 0.0f, 0.2f, 1.0f });
         if (ui_selectable("Clear Nodes\t", ICON_FA_TRASH)) {
             sequencer_clear(sequencer);
         }
@@ -492,9 +756,9 @@ static void sequencer_render_editor(Sequencer *sequencer) {
         igEndDragDropTarget();
     }
 
-    s32 origin_id, target_id;
-    if (imnodes_IsLinkCreated_BoolPtr(&origin_id, &target_id, nil)) {
-        SequenceLink *link = sequence_link_make(sequencer, origin_id, target_id);
+    s32 from, to;
+    if (imnodes_IsLinkCreated_BoolPtr(&from, &to, nil)) {
+        SequenceLink *link = sequence_link_make(sequencer, from, to);
         sequencer_emplace_link(sequencer, link);
     }
 

@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#ifndef ASCOM_UTILS_CJSON_HELPER_H
+#define ASCOM_UTILS_CJSON_HELPER_H
 
-#include "types.h"
+#include "cJSON.h"
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+#include <libcore/string.h>
+#include <libcore/types.h>
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+// Retrieves a string by name from a cJSON instance
+const char *cJSON_GetNativeStringByName(cJSON const *json, const char *key);
 
-#endif// CORE_MATH_H
+// Retrieves a number by name from a cJSON instance
+f64 cJSON_GetNumberByName(cJSON const *json, const char *key);
+
+/// Retrieves a string value that might not be present from a JSON object
+String cJSON_GetStringByName(MemoryArena *arena, cJSON const *json, const char *key);
+
+#endif// ASCOM_UTILS_CJSON_HELPER_H
