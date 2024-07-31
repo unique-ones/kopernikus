@@ -21,40 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <Windows.h>
+#ifndef KOPERNIKUS_LOCATION_H
+#define KOPERNIKUS_LOCATION_H
 
-#include <libcore/arch/thread.h>
+#include <libcore/string.h>
 
-/// Creates a new thread with the specified runner
-Thread thread_create(ThreadRunner runner, void *arg) {
-    Thread thread = CreateThread(nil, 0, runner, arg, 0, nil);
-    return thread;
-}
+typedef struct GeoLocation {
+    String country;
+    String region;
+    String city;
+    f64 latitude;
+    f64 longitude;
+    MemoryArena *arena;
+} GeoLocation;
 
-typedef struct Mutex {
-    HANDLE handle;
-} Mutex;
+/// Fetches the users location from the internet
+/// @param location The location
+/// @param arena The arena for the request
+/// @note The location is set asynchronously
+void geo_location_fetch(GeoLocation *location, MemoryArena *arena);
 
-/// Creates a new mutex
-Mutex *mutex_new(void) {
-    Mutex *self = (Mutex *) malloc(sizeof(Mutex));
-    self->handle = CreateMutexA(nil, FALSE, nil);
-    return self;
-}
-
-/// Frees the mutex
-void mutex_free(Mutex *self) {
-    CloseHandle(self->handle);
-    self->handle = INVALID_HANDLE_VALUE;
-    free(self);
-}
-
-/// Exclusively locks the mutex
-void mutex_lock(Mutex *self) {
-    WaitForSingleObject(self->handle, INFINITE);
-}
-
-/// Unlocks the mutex
-void mutex_unlock(Mutex *self) {
-    ReleaseMutex(self->handle);
-}
+#endif// KOPERNIKUS_LOCATION_H

@@ -28,29 +28,19 @@
 
 #include "browser.h"
 #include "sequencer.h"
+#include "settings.h"
 #include "ui.h"
 
 int main(void) {
-    MemoryArena arena = memory_arena_identity(ALIGNMENT1);
-    HttpResponse response = { 0 };
-    http_client_get(&response, &arena, "http://localhost:32323/management/apiversions");
-    fprintf(stderr, "Response: %.*s\n", (int) response.body.length, response.body.base);
-    cJSON *json = cJSON_ParseWithLength(response.body.base, response.body.length);
-    if (json) {
-        char *string = cJSON_Print(json);
-        fprintf(stderr, "JSON: %s\n", string);
-        cJSON_free(string);
-    }
-    cJSON_Delete(json);
-
-    memory_arena_destroy(&arena);
-
     Display display = { 0 };
     display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);
 
+    Settings settings = { 0 };
+    settings_make(&settings);
+
     ObjectBrowser browser = { 0 };
-    object_browser_make(&browser);
+    object_browser_make(&browser, &settings);
 
     Sequencer sequencer = { 0 };
     sequencer_make(&sequencer, &browser);
@@ -106,6 +96,8 @@ int main(void) {
     }
 
     sequencer_destroy(&sequencer);
+    object_browser_destroy(&browser);
+    settings_destroy(&settings);
 
     ui_destroy();
     display_destroy(&display);

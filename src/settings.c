@@ -21,40 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <Windows.h>
+#include "settings.h"
 
-#include <libcore/arch/thread.h>
-
-/// Creates a new thread with the specified runner
-Thread thread_create(ThreadRunner runner, void *arg) {
-    Thread thread = CreateThread(nil, 0, runner, arg, 0, nil);
-    return thread;
+/// Initializes the settings
+void settings_make(Settings *settings) {
+    settings->arena = memory_arena_identity(ALIGNMENT1);
+    geo_location_fetch(&settings->location, &settings->arena);
 }
 
-typedef struct Mutex {
-    HANDLE handle;
-} Mutex;
-
-/// Creates a new mutex
-Mutex *mutex_new(void) {
-    Mutex *self = (Mutex *) malloc(sizeof(Mutex));
-    self->handle = CreateMutexA(nil, FALSE, nil);
-    return self;
-}
-
-/// Frees the mutex
-void mutex_free(Mutex *self) {
-    CloseHandle(self->handle);
-    self->handle = INVALID_HANDLE_VALUE;
-    free(self);
-}
-
-/// Exclusively locks the mutex
-void mutex_lock(Mutex *self) {
-    WaitForSingleObject(self->handle, INFINITE);
-}
-
-/// Unlocks the mutex
-void mutex_unlock(Mutex *self) {
-    ReleaseMutex(self->handle);
+/// Destroys the provided settings
+void settings_destroy(Settings *settings) {
+    memory_arena_destroy(&settings->arena);
 }

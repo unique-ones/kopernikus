@@ -21,40 +21,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <Windows.h>
+#ifndef KOPERNIKUS_SETTINGS_H
+#define KOPERNIKUS_SETTINGS_H
 
-#include <libcore/arch/thread.h>
+#include "location.h"
 
-/// Creates a new thread with the specified runner
-Thread thread_create(ThreadRunner runner, void *arg) {
-    Thread thread = CreateThread(nil, 0, runner, arg, 0, nil);
-    return thread;
-}
+/// TODO(elias): Add serialization
+typedef struct Settings {
+  MemoryArena arena;
+  GeoLocation location;
+} Settings;
 
-typedef struct Mutex {
-    HANDLE handle;
-} Mutex;
+/// Initializes the settings
+/// @param settings The settings
+/// @note Tries to fetch the location of the observer
+///       from the internet.
+void settings_make(Settings *settings);
 
-/// Creates a new mutex
-Mutex *mutex_new(void) {
-    Mutex *self = (Mutex *) malloc(sizeof(Mutex));
-    self->handle = CreateMutexA(nil, FALSE, nil);
-    return self;
-}
+/// Destroys the provided settings
+/// @param settings The settings
+void settings_destroy(Settings *settings);
 
-/// Frees the mutex
-void mutex_free(Mutex *self) {
-    CloseHandle(self->handle);
-    self->handle = INVALID_HANDLE_VALUE;
-    free(self);
-}
-
-/// Exclusively locks the mutex
-void mutex_lock(Mutex *self) {
-    WaitForSingleObject(self->handle, INFINITE);
-}
-
-/// Unlocks the mutex
-void mutex_unlock(Mutex *self) {
-    ReleaseMutex(self->handle);
-}
+#endif// KOPERNIKUS_SETTINGS_H
