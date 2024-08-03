@@ -44,6 +44,12 @@ typedef struct HttpResponse {
     HttpResponseCode code;
 } HttpResponse;
 
+/// Initializes the HTTP client
+void http_client_init(void);
+
+/// Destroys the HTTP client
+void http_client_destroy(void);
+
 /// Performs a HTTP GET request and retrieves the response
 /// @param response The HTTP response (text and code)
 /// @param arena The arena for allocating the response string

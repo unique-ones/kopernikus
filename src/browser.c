@@ -21,24 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <solaris/arena.h>
-#include <solaris/globe.h>
-
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-
-#include <libcore/input.h>
-#include <libcore/log.h>
-
-#include "browser.h"
-#include "solaris/math.h"
-#include "solaris/object.h"
-#include "ui.h"
 
 #include <cimgui.h>
 #include <cimplot.h>
 
+#include <solaris/arena.h>
+#include <solaris/globe.h>
+#include <solaris/object.h>
+
+#include <libcore/input.h>
+
+#include "browser.h"
+#include "ui.h"
 
 /// Create a new ObjectBrowser
 void object_browser_make(ObjectBrowser *browser, Settings *settings) {

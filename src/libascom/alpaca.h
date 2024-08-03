@@ -27,9 +27,7 @@
 #include <libascom/http/client.h>
 #include <libcore/string.h>
 
-enum {
-    ALPACA_SUPPORTED_VERSION = 1,
-};
+#include "utils/cJSON.h"
 
 typedef enum AlpacaStatus {
     ALPACA_OK = 200,
@@ -53,60 +51,25 @@ typedef struct AlpacaResult {
     AlpacaStatus status;
     u32 client_tx_id;
     u32 server_tx_id;
-    s32 err_number;
-    String err_message;
+    AlpacaError err_number;
+    cJSON *value;
 } AlpacaResult;
 
-typedef struct AlpacaDeviceInfo {
-    /// The name of the device
-    String device_name;
+/// Creates a new alpaca result
+/// @param result The alpaca result
+/// @param status The alpaca status
+/// @param client_tx_id The transaction ID of the client
+/// @param server_tx_id The transaction ID of the server
+/// @param error The alpaca error
+void alpaca_result_make(AlpacaResult *result,
+                        AlpacaStatus status,
+                        u32 client_tx_id,
+                        u32 server_tx_id,
+                        AlpacaError error,
+                        cJSON *value);
 
-    /// The type of the device
-    String device_type;
-
-    /// The number of the device
-    u32 device_number;
-
-    /// The UUID of the device
-    String unique_id;
-} AlpacaDeviceInfo;
-
-typedef struct AlpacaConn {
-    /// The arena of the connection
-    MemoryArena arena;
-
-    /// The configured server
-    String server;
-
-    /// The name of the configured server
-    String server_name;
-
-    /// The name of the manufacturer
-    String manufacturer;
-
-    /// The manufacturer version
-    String manufacturer_version;
-
-    /// The location of the API
-    String location;
-
-    /// The API version
-    u32 version;
-} AlpacaConn;
-
-/// Creates a new alpaca connection
-/// @param conn The connection
-void alpaca_conn_make(AlpacaConn *conn);
-
-/// Destroys the specified alpaca connection
-/// @param conn The connection
-void alpaca_conn_destroy(AlpacaConn *conn);
-
-/// Tries to connect to the specified alpaca server
-/// @param conn The connection
-/// @param hostname The server hostname
-/// @param port The server port
-/// @return A boolean value that indicates success
-b8 alpaca_conn_connect(AlpacaConn *conn, StringView *hostname, u32 port);
+/// Destroys the alpaca result
+/// @param result The alpaca result
+void alpaca_result_destroy(AlpacaResult *result);
 
 #endif// ASCOM_ALPACA_H

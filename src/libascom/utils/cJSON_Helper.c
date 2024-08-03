@@ -22,6 +22,7 @@
 // SOFTWARE.
 
 #include <libcore/types.h>
+#include <string.h>
 
 #include "cJSON_Helper.h"
 
@@ -33,7 +34,7 @@ static cJSON *cJSON_GetObjectItemChecked(cJSON *json, const char *key) {
 }
 
 // Retrieves a string by name from a cJSON instance
-const char *cJSON_GetStringByName(cJSON *json, const char *key) {
+const char *cJSON_GetNativeStringByName(cJSON *json, const char *key) {
     cJSON *item = cJSON_GetObjectItemChecked(json, key);
     if (item == nil) {
         return nil;
@@ -45,25 +46,30 @@ const char *cJSON_GetStringByName(cJSON *json, const char *key) {
 }
 
 // Retrieves a number by name from a cJSON instance
-f64 *cJSON_GetNumberByName(cJSON *json, const char *key) {
+f64 cJSON_GetNumberByName(cJSON *json, const char *key) {
     cJSON *item = cJSON_GetObjectItemChecked(json, key);
     if (item == nil) {
-        return nil;
+        return 0.0;
     }
     if (!cJSON_IsNumber(item)) {
-        return nil;
+        return 0.0;
     }
-    return &item->valuedouble;
+    return item->valuedouble;
 }
 
-// Retrieves a number by name from a cJSON instance
-cJSON *cJSON_GetArrayByName(cJSON *json, const char *key) {
-    cJSON *item = cJSON_GetObjectItemChecked(json, key);
-    if (item == nil) {
-        return nil;
+/// Creates a string from a possibly nil cstr
+/// @param arena The arena for the allocation
+/// @param source The source string that is possibly nil
+/// @return A string instance
+static String string_from_possibly_nil(MemoryArena *arena, const char *source) {
+    if (source == nil) {
+        return (String){ 0 };
     }
-    if (!cJSON_IsArray(item)) {
-        return nil;
-    }
-    return item;
+
+    return string_new(arena, source, strlen(source));
+}
+
+/// Retrieves a string value that might not be present from a JSON object
+String cJSON_GetStringByName(MemoryArena *arena, cJSON *json, const char *key) {
+    return string_from_possibly_nil(arena, cJSON_GetNativeStringByName(json, key));
 }

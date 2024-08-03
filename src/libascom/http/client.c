@@ -26,7 +26,41 @@
 #include <string.h>
 
 #include <libascom/http/client.h>
+#include <libcore/arch/thread.h>
 #include <libcore/types.h>
+
+/// Global lock for the curl share instance
+static Mutex *http_share_lock = nil;
+
+/// Global curl share instance
+static CURLSH *http_share_handle = nil;
+
+/// CURL share lock function
+static void http_client_lock(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr) {
+    mutex_lock(http_share_lock);
+}
+
+/// CURL share unlock function
+static void http_client_unlock(CURL *handle, curl_lock_data data, void *userptr) {
+    mutex_unlock(http_share_lock);
+}
+
+/// Initializes the HTTP client
+void http_client_init() {
+    http_share_lock = mutex_new();
+    http_share_handle = curl_share_init();
+    curl_share_setopt(http_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+    curl_share_setopt(http_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
+    curl_share_setopt(http_share_handle, CURLSHOPT_LOCKFUNC, http_client_lock);
+    curl_share_setopt(http_share_handle, CURLSHOPT_UNLOCKFUNC, http_client_unlock);
+}
+
+/// Destroys the HTTP client
+void http_client_destroy() {
+    curl_share_cleanup(http_share_handle);
+    http_share_handle = nil;
+    mutex_free(http_share_lock);
+}
 
 /// Retrieves a string representation of the specified HTTP response code
 /// @param code The HTTP response code

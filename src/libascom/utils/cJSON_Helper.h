@@ -26,13 +26,16 @@
 
 #include "cJSON.h"
 
+#include <libcore/string.h>
+#include <libcore/types.h>
+
 // Retrieves a string by name from a cJSON instance
-const char *cJSON_GetStringByName(cJSON *json, const char *key);
+const char *cJSON_GetNativeStringByName(cJSON *json, const char *key);
 
 // Retrieves a number by name from a cJSON instance
-f64 *cJSON_GetNumberByName(cJSON *json, const char *key);
+f64 cJSON_GetNumberByName(cJSON *json, const char *key);
 
-// Retrieves a number by name from a cJSON instance
-cJSON *cJSON_GetArrayByName(cJSON *json, const char *key);
+/// Retrieves a string value that might not be present from a JSON object
+String cJSON_GetStringByName(MemoryArena *arena, cJSON *json, const char *key);
 
 #endif// ASCOM_UTILS_CJSON_HELPER_H

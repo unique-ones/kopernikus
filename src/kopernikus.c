@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <libascom/device.h>
 #include <libascom/http/client.h>
 #include <libascom/utils/cJSON.h>
 #include <libcore/display.h>
@@ -32,6 +33,8 @@
 #include "ui.h"
 
 int main(void) {
+    http_client_init();
+
     Display display = { 0 };
     display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);
@@ -101,5 +104,7 @@ int main(void) {
 
     ui_destroy();
     display_destroy(&display);
+
+    http_client_destroy();
     return 0;
 }
