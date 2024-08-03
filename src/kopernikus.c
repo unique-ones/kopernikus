@@ -23,6 +23,7 @@
 
 #include <libascom/device.h>
 #include <libascom/http/client.h>
+#include <libascom/observing_conditions.h>
 #include <libascom/utils/cJSON.h>
 #include <libcore/display.h>
 #include <libcore/log.h>

@@ -52,24 +52,28 @@ typedef struct AlpacaResult {
     u32 client_tx_id;
     u32 server_tx_id;
     AlpacaError err_number;
-    cJSON *value;
 } AlpacaResult;
 
+typedef struct AlpacaResponse {
+    AlpacaResult result;
+    cJSON *value;
+} AlpacaResponse;
+
 /// Creates a new alpaca result
-/// @param result The alpaca result
+/// @param result The alpaca request result
 /// @param status The alpaca status
 /// @param client_tx_id The transaction ID of the client
 /// @param server_tx_id The transaction ID of the server
 /// @param error The alpaca error
-void alpaca_result_make(AlpacaResult *result,
-                        AlpacaStatus status,
-                        u32 client_tx_id,
-                        u32 server_tx_id,
-                        AlpacaError error,
-                        cJSON *value);
+void alpaca_response_make(AlpacaResponse *result,
+                                AlpacaStatus status,
+                                u32 client_tx_id,
+                                u32 server_tx_id,
+                                AlpacaError error,
+                                cJSON *value);
 
 /// Destroys the alpaca result
 /// @param result The alpaca result
-void alpaca_result_destroy(AlpacaResult *result);
+void alpaca_response_destroy(AlpacaResponse *result);
 
 #endif// ASCOM_ALPACA_H

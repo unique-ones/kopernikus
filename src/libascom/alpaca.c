@@ -24,21 +24,21 @@
 #include "alpaca.h"
 
 /// Creates a new alpaca result
-void alpaca_result_make(AlpacaResult *result,
-                        AlpacaStatus status,
-                        u32 client_tx_id,
-                        u32 server_tx_id,
-                        AlpacaError error,
-                        cJSON *value) {
-    result->status = status;
-    result->client_tx_id = client_tx_id;
-    result->server_tx_id = server_tx_id;
-    result->err_number = error;
+void alpaca_response_make(AlpacaResponse *result,
+                                AlpacaStatus status,
+                                u32 client_tx_id,
+                                u32 server_tx_id,
+                                AlpacaError error,
+                                cJSON *value) {
+    result->result.status = status;
+    result->result.client_tx_id = client_tx_id;
+    result->result.server_tx_id = server_tx_id;
+    result->result.err_number = error;
     result->value = value;
 }
 
 /// Destroys the alpaca result
-void alpaca_result_destroy(AlpacaResult *result) {
+void alpaca_response_destroy(AlpacaResponse *result) {
     if (result->value == nil) {
         return;
     }

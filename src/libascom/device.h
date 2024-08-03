@@ -37,6 +37,7 @@ enum {
 
 typedef enum AlpacaDeviceType {
     ALPACA_DEVICE_TYPE_NONE = 0,
+    ALPACA_DEVICE_TYPE_OBSERVING_CONDITIONS,
     ALPACA_DEVICE_TYPE_TELESCOPE,
 } AlpacaDeviceType;
 
@@ -79,24 +80,31 @@ void alpaca_device_make(AlpacaDevice *device, AlpacaDeviceType type, StringView 
 void alpaca_device_destroy(AlpacaDevice *device);
 
 /// Send an HTTP GET request to the device
-/// @note It is extremely important to know that the result
+/// @note It is extremely important to know that the response
 ///       must be destroyed by the caller.
 ///
 /// @param device The alpaca device handle
 /// @param arena The arena for the request allocation
 /// @param attribute The attribute to get from the server
-/// @return A result
-AlpacaResult alpaca_device_get(AlpacaDevice *device, MemoryArena *arena, StringView *attribute);
+/// @return A response
+AlpacaResponse alpaca_device_get(AlpacaDevice *device, MemoryArena *arena, const char *attribute);
 
 /// Send an HTTP PUT request to the device
-/// @note It is extremely important to know that the result
+/// @note It is extremely important to know that the response
 ///       must be destroyed by the caller.
 ///
 /// @param device The alpaca device handle
 /// @param arena The arena for the request allocation
 /// @param attribute The attribute to put to the server
 /// @param data The data to send with the request
+/// @return A response
+AlpacaResponse alpaca_device_put(AlpacaDevice *device, MemoryArena *arena, const char *attribute, cJSON *data);
+
+/// Send an HTTP GET request to the device and retrieve a f64 value
+/// @param device The alpaca device handle
+/// @param arena The arena for the request allocation
+/// @param attribute The attribute to get from the server
 /// @return A result
-AlpacaResult alpaca_device_put(AlpacaDevice *device, MemoryArena *arena, StringView *attribute, cJSON *data);
+AlpacaResult alpaca_device_get_f64(AlpacaDevice *device, MemoryArena *arena, const char *attribute, f64 *value);
 
 #endif// ASCOM_DEVICE_H
