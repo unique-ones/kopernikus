@@ -31,6 +31,12 @@ Thread thread_create(ThreadRunner runner, void *arg) {
     return thread;
 }
 
+/// Sends the curent thread of execution to sleep for the
+/// specified time.
+void thread_sleep(u64 milliseconds) {
+    Sleep((u32) milliseconds);
+}
+
 typedef struct Mutex {
     HANDLE handle;
 } Mutex;

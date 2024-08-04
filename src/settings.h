@@ -28,8 +28,8 @@
 
 /// TODO(elias): Add serialization
 typedef struct Settings {
-  MemoryArena arena;
-  GeoLocation location;
+    MemoryArena arena;
+    GeoLocation location;
 } Settings;
 
 /// Initializes the settings

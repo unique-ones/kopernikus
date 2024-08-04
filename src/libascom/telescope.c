@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,65 +21,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#include "telescope.h"
 
-#include <glad/glad.h>
-#include <inttypes.h>
-#include <solaris/time.h>
-#include <solaris/types.h>
+/// Creates a new telescope device
+void alpaca_telescope_make(AlpacaTelescope *telescope, StringView *address, u32 number) {
+    alpaca_device_make(&telescope->device, ALPACA_DEVICE_TYPE_TELESCOPE, address, number);
+}
 
-typedef float f32;
+/// Destroys the telescope device
+void alpaca_telescope_destroy(AlpacaTelescope *telescope) {
+    alpaca_device_destroy(&telescope->device);
+}
 
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
+/// Tries to retrieve the mount's current altitude (°) above the horizon
+AlpacaResult alpaca_telescope_altitude(AlpacaTelescope *telescope, MemoryArena *arena, f64 *value) {
+    return alpaca_device_get_f64(&telescope->device, arena, "altitude", value);
+}
 
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
-
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
-
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
-
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
-
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-typedef struct Duration {
-    f64 amount;
-    TimeUnit unit;
-} Duration;
-
-#endif// CORE_TYPES_H
+/// Tries to retrieve the mount's current azimuth (°)
+AlpacaResult alpaca_telescope_azimuth(AlpacaTelescope *telescope, MemoryArena *arena, f64 *value) {
+    return alpaca_device_get_f64(&telescope->device, arena, "azimuth", value);
+}

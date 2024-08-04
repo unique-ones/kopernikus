@@ -23,6 +23,7 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <libcore/arch/thread.h>
 
@@ -31,6 +32,15 @@ Thread thread_create(ThreadRunner runner, void *arg) {
     pthread_t thread;
     pthread_create(&thread, nil, runner, arg);
     return (Thread) thread;
+}
+
+/// Sends the curent thread of execution to sleep for the
+/// specified time.
+void thread_sleep(u64 milliseconds) {
+    struct timespec ts = { 0 };
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
 }
 
 typedef struct Mutex {

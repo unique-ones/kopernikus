@@ -29,6 +29,7 @@
 #include <libcore/log.h>
 
 #include "browser.h"
+#include "gear.h"
 #include "sequencer.h"
 #include "settings.h"
 #include "ui.h"
@@ -49,6 +50,9 @@ int main(void) {
     Sequencer sequencer = { 0 };
     sequencer_make(&sequencer, &browser);
 
+    Gear gear = { 0 };
+    gear_make(&gear, 1.0f);
+
     while (display_running(&display)) {
         ui_begin();
 
@@ -66,6 +70,11 @@ int main(void) {
                 }
                 if (ui_selectable("Properties\t", ICON_FA_BOOK)) {
                     browser.show_properties = true;
+                }
+                ui_separator();
+                ui_note("Devices");
+                if (ui_selectable("Properties\t", ICON_FA_BOOK)) {
+                    gear.show_properties = true;
                 }
                 ui_separator();
                 ui_note("Editor");
@@ -94,11 +103,13 @@ int main(void) {
 
         object_browser_render(&browser);
         sequencer_render(&sequencer);
+        gear_render(&gear);
 
         ui_end();
         display_update_frame(&display);
     }
 
+    gear_destroy(&gear);
     sequencer_destroy(&sequencer);
     object_browser_destroy(&browser);
     settings_destroy(&settings);

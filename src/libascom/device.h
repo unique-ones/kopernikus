@@ -107,4 +107,18 @@ AlpacaResponse alpaca_device_put(AlpacaDevice *device, MemoryArena *arena, const
 /// @return A result
 AlpacaResult alpaca_device_get_f64(AlpacaDevice *device, MemoryArena *arena, const char *attribute, f64 *value);
 
+/// Send an HTTP GET request to the device and retrieve a s64 value
+/// @param device The alpaca device handle
+/// @param arena The arena for the request allocation
+/// @param attribute The attribute to get from the server
+/// @return A result
+AlpacaResult alpaca_device_get_s64(AlpacaDevice *device, MemoryArena *arena, const char *attribute, s64 *value);
+
+/// Send an HTTP GET request to the device and retrieve a boolean value
+/// @param device The alpaca device handle
+/// @param arena The arena for the request allocation
+/// @param attribute The attribute to get from the server
+/// @return A result
+AlpacaResult alpaca_device_get_bool(AlpacaDevice *device, MemoryArena *arena, const char *attribute, b8 *value);
+
 #endif// ASCOM_DEVICE_H

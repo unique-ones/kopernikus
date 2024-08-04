@@ -30,26 +30,30 @@
 #include <libcore/types.h>
 
 /// Global lock for the curl share instance
-static Mutex *http_share_lock = nil;
+static Mutex *http_share_locks[CURL_LOCK_DATA_LAST];
 
 /// Global curl share instance
 static CURLSH *http_share_handle = nil;
 
 /// CURL share lock function
-static void http_client_lock(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr) {
-    mutex_lock(http_share_lock);
+static void http_client_lock(CURL *handle, curl_lock_data data, curl_lock_access access, void *user) {
+    mutex_lock(http_share_locks[data]);
 }
 
 /// CURL share unlock function
-static void http_client_unlock(CURL *handle, curl_lock_data data, void *userptr) {
-    mutex_unlock(http_share_lock);
+static void http_client_unlock(CURL *handle, curl_lock_data data, void *user) {
+    mutex_unlock(http_share_locks[data]);
 }
 
 /// Initializes the HTTP client
 void http_client_init() {
-    http_share_lock = mutex_new();
+    for (u8 i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
+        http_share_locks[i] = mutex_new();
+    }
+
     http_share_handle = curl_share_init();
     curl_share_setopt(http_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+    curl_share_setopt(http_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
     curl_share_setopt(http_share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
     curl_share_setopt(http_share_handle, CURLSHOPT_LOCKFUNC, http_client_lock);
     curl_share_setopt(http_share_handle, CURLSHOPT_UNLOCKFUNC, http_client_unlock);
@@ -59,7 +63,9 @@ void http_client_init() {
 void http_client_destroy() {
     curl_share_cleanup(http_share_handle);
     http_share_handle = nil;
-    mutex_free(http_share_lock);
+    for (u8 i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
+        mutex_free(http_share_locks[i]);
+    }
 }
 
 /// Retrieves a string representation of the specified HTTP response code
@@ -103,6 +109,13 @@ static usize http_client_read(u8 *content, usize size, usize member_size, String
 /// Performs a HTTP GET request and retrieves the response
 b8 http_client_get(HttpResponse *response, MemoryArena *arena, const char *url) {
     CURL *curl = curl_easy_init();
+    if (curl == nil) {
+        return false;
+    }
+
+    // Use the shared handle for connection reuse
+    curl_easy_setopt(curl, CURLOPT_SHARE, http_share_handle);
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_client_read);
     curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -137,6 +150,13 @@ b8 http_client_get(HttpResponse *response, MemoryArena *arena, const char *url) 
 /// Performs a HTTP PUT request and retrieves the response
 b8 http_client_put(HttpResponse *response, MemoryArena *arena, const char *url, StringView *data) {
     CURL *curl = curl_easy_init();
+    if (curl == nil) {
+        return false;
+    }
+
+    // Use the shared handle for connection reuse
+    curl_easy_setopt(curl, CURLOPT_SHARE, http_share_handle);
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_client_read);
 

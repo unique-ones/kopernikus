@@ -383,9 +383,11 @@ void ui_property_real_readonly(const char *property, f64 x, const char *fmt) {
 }
 
 /// Draw a searchbar
-b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder) {
-    ImVec2 available;
-    igGetContentRegionAvail(&available);
+b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder, b8 full_width) {
+    ImVec2 available = { 0 };
+    if (full_width) {
+        igGetContentRegionAvail(&available);
+    }
     return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size, (ImVec2){ available.x, 0.0f },
                          ImGuiInputTextFlags_None, nil, nil);
 }
@@ -394,6 +396,26 @@ b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder
 b8 ui_combobox(const char *title, s32 *selected, const char **items, usize length) {
     return igCombo_Str_arr(title, selected, items, length, -1);
 }
+
+/// Draws a button
+b8 ui_button(const char *label, b8 full_width) {
+    ImVec2 available = { 0 };
+    if (full_width) {
+        igGetContentRegionAvail(&available);
+    }
+    return igButton(label, (ImVec2){ available.x, 0.0f });
+}
+
+/// Draws a light and colorful button
+b8 ui_button_light(const char *label, b8 full_width) {
+    igPushStyleColor_Vec4(ImGuiCol_Button, (ImVec4){ 0.84f, 0.45f, 0.49f, 1.0f });
+    igPushStyleColor_Vec4(ImGuiCol_ButtonHovered, (ImVec4){ 0.91f, 0.52f, 0.56f, 1.0f });
+    igPushStyleColor_Vec4(ImGuiCol_ButtonActive, (ImVec4){ 0.82f, 0.43f, 0.47f, 1.0f });
+    b8 result = ui_button(label, full_width);
+    igPopStyleColor(3);
+    return result;
+}
+
 
 /// Draws a tree node with an optional icon
 b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected) {

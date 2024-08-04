@@ -102,7 +102,7 @@ static void object_browser_render_tree(ObjectBrowser *browser) {
 
     if (igCollapsingHeader_BoolPtr("Objects", nil, ImGuiTreeNodeFlags_DefaultOpen)) {
         StringBuffer buffer = { browser->search_buffer, sizeof browser->search_buffer };
-        ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...");
+        ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...", true);
 
         // Check how many bytes are typed into the search bar
         usize search_fill = strlen(buffer.data);

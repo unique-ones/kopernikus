@@ -26,6 +26,8 @@
 
 #include <libcore/string.h>
 
+// TODO(elias): This will be obsolete with the telescope site information
+
 typedef struct GeoLocation {
     String country;
     String region;

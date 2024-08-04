@@ -23,6 +23,7 @@
 
 #ifndef CORE_THREAD_H
 #define CORE_THREAD_H
+
 #include "../types.h"
 
 #ifdef CORE_PLATFORM_WIN32
@@ -42,6 +43,11 @@ typedef void *(*ThreadRunner)(void *);
 /// @param arg The argument that is passed to the runner
 /// @return A thread handle
 Thread thread_create(ThreadRunner runner, void *arg);
+
+/// Sends the curent thread of execution to sleep for the
+/// specified time.
+/// @param milliseconds The time in milliseconds
+void thread_sleep(u64 milliseconds);
 
 typedef struct Mutex Mutex;
 

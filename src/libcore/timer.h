@@ -1,7 +1,7 @@
 //
 // MIT License
 //
-// Copyright (c) 2023 Elias Engelbert Plank
+// Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,65 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_TYPES_H
-#define CORE_TYPES_H
+#ifndef CORE_TIMER_H
+#define CORE_TIMER_H
 
-#include <glad/glad.h>
-#include <inttypes.h>
-#include <solaris/time.h>
-#include <solaris/types.h>
+#include <time.h>
 
-typedef float f32;
+#include "types.h"
 
-#define ASSERT(x, ...)                \
-    if (!(x)) {                       \
-        fprintf(stderr, __VA_ARGS__); \
-        abort();                      \
-    }
+typedef struct Timer {
+    clock_t start;
+    clock_t end;
+} Timer;
 
-typedef struct Vector2s {
-    s32 x;
-    s32 y;
-} Vector2s;
+/// Creates a new timer
+/// @param timer The timer handle
+void timer_make(Timer *timer);
 
-typedef struct Vector3s {
-    s32 x;
-    s32 y;
-    s32 z;
-} Vector3s;
+/// Starts the timer
+/// @param timer The timer handle
+void timer_start(Timer *timer);
 
-typedef struct Vector4s {
-    s32 x;
-    s32 y;
-    s32 z;
-    s32 w;
-} Vector4s;
+/// Ends the timer
+/// @param timer The timer handle
+void timer_end(Timer *timer);
 
-typedef struct Vector2f {
-    f32 x;
-    f32 y;
-} Vector2f;
+/// Computes the elapsed milliseconds of the timer
+/// @param timer The timer handle
+/// @return The elapsed milliseconds between start and end
+f64 timer_elapsed(Timer *timer);
 
-typedef struct Vector3f {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vector3f;
-
-typedef struct Vector4f {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 w;
-} Vector4f;
-
-typedef struct Matrix4x4f {
-    Vector4f value[4];
-} Matrix4x4f;
-
-typedef struct Duration {
-    f64 amount;
-    TimeUnit unit;
-} Duration;
-
-#endif// CORE_TYPES_H
+#endif// CORE_TIMER_H

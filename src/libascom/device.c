@@ -188,3 +188,21 @@ AlpacaResult alpaca_device_get_f64(AlpacaDevice *device, MemoryArena *arena, con
     alpaca_response_destroy(&response);
     return result;
 }
+
+/// Send an HTTP GET request to the device and retrieve a s64 value
+AlpacaResult alpaca_device_get_s64(AlpacaDevice *device, MemoryArena *arena, const char *attribute, s64 *value) {
+    AlpacaResponse response = alpaca_device_get(device, arena, attribute);
+    *value = (s64) cJSON_GetNumberValue(response.value);
+    AlpacaResult result = response.result;
+    alpaca_response_destroy(&response);
+    return result;
+}
+
+/// Send an HTTP GET request to the device and retrieve a boolean value
+AlpacaResult alpaca_device_get_bool(AlpacaDevice *device, MemoryArena *arena, const char *attribute, b8 *value) {
+    AlpacaResponse response = alpaca_device_get(device, arena, attribute);
+    *value = cJSON_IsTrue(response.value);
+    AlpacaResult result = response.result;
+    alpaca_response_destroy(&response);
+    return result;
+}
