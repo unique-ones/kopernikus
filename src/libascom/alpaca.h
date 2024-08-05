@@ -29,6 +29,10 @@
 
 #include "utils/cJSON.h"
 
+enum {
+    ALPACA_API_VERSION = 1
+};
+
 typedef enum AlpacaStatus {
     ALPACA_OK = 200,
     ALPACA_BAD_REQUEST = 400,
@@ -52,6 +56,7 @@ typedef struct AlpacaResult {
     u32 client_tx_id;
     u32 server_tx_id;
     AlpacaError err_number;
+    b8 ok;
 } AlpacaResult;
 
 typedef struct AlpacaResponse {
@@ -59,18 +64,14 @@ typedef struct AlpacaResponse {
     cJSON *value;
 } AlpacaResponse;
 
-/// Creates a new alpaca result
-/// @param result The alpaca request result
-/// @param status The alpaca status
-/// @param client_tx_id The transaction ID of the client
-/// @param server_tx_id The transaction ID of the server
-/// @param error The alpaca error
-void alpaca_response_make(AlpacaResponse *result,
-                                AlpacaStatus status,
-                                u32 client_tx_id,
-                                u32 server_tx_id,
-                                AlpacaError error,
-                                cJSON *value);
+/// Creates a new alpaca response
+/// @param response The response
+/// @param body The body
+void alpaca_response_make(AlpacaResponse *response, HttpResponse *http);
+
+/// Creates a failed alpaca response
+/// @param response The response
+void alpaca_response_make_failed(AlpacaResponse *response);
 
 /// Destroys the alpaca result
 /// @param result The alpaca result

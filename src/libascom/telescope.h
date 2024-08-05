@@ -120,34 +120,19 @@ typedef struct AlpacaRate {
     f64 max;
 } AlpacaRate;
 
-/// ASCOM Standard ITelescope V3 Interface
-typedef struct AlpacaTelescope {
-    AlpacaDevice device;
-} AlpacaTelescope;
-
-/// Creates a new telescope device
-/// @param telescope The telescope device
-/// @param address The address of the alpaca server, can also specify port if needed
-/// @param number Zero based device number as set on the server
-void alpaca_telescope_make(AlpacaTelescope *telescope, StringView *address, u32 number);
-
-/// Destroys the telescope device
-/// @param telescope The telescope device
-void alpaca_telescope_destroy(AlpacaTelescope *telescope);
-
 /// Tries to retrieve the mount's current altitude (°) above the horizon
-/// @param telescope The telescope device
+/// @param device The telescope device
 /// @param arena The memory arena for the request
 /// @param value The value that will be set
 /// @return A result
-AlpacaResult alpaca_telescope_altitude(AlpacaTelescope *telescope, MemoryArena *arena, f64 *value);
+AlpacaResult alpaca_telescope_altitude(AlpacaDevice *device, MemoryArena *arena, f64 *value);
 
 /// Tries to retrieve the mount's current azimuth (°)
-/// @param telescope The telescope device
+/// @param device The telescope device
 /// @param arena The memory arena for the request
 /// @param value The value that will be set
 /// @return A result
-AlpacaResult alpaca_telescope_azimuth(AlpacaTelescope *telescope, MemoryArena *arena, f64 *value);
+AlpacaResult alpaca_telescope_azimuth(AlpacaDevice *device, MemoryArena *arena, f64 *value);
 
 /// UNIMPLEMENTED TODOS(elias):
 /// AlignmentMode

@@ -23,114 +23,100 @@
 
 #include "observing_conditions.h"
 
-/// Creates a new observing conditions device
-void alpaca_observing_conds_make(AlpacaObservingConds *observing_conditions, StringView *address, u32 number) {
-    alpaca_device_make(&observing_conditions->device, ALPACA_DEVICE_TYPE_OBSERVING_CONDITIONS, address, number);
-}
-
-/// Destroys the observing conditions device
-void alpaca_observing_conds_destroy(AlpacaObservingConds *observing_conditions) {
-    alpaca_device_destroy(&observing_conditions->device);
-}
-
 /// Tries to retrieve the average time period (hours) over which observations are averaged
-AlpacaResult alpaca_observing_conds_average_period(AlpacaObservingConds *observing_conditions,
-                                                   MemoryArena *arena,
-                                                   f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "averageperiod", value);
+AlpacaResult alpaca_observing_conds_average_period(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "averageperiod", value);
+    device->payload.average_period = *value;
+    return result;
 }
 
 /// Tries to retrieve the amount of by cloud obscured sky (0.0 to 1.0)
-AlpacaResult alpaca_observing_conds_cloud_cover(AlpacaObservingConds *observing_conditions,
-                                                MemoryArena *arena,
-                                                f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "cloudcover", value);
+AlpacaResult alpaca_observing_conds_cloud_cover(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "cloudcover", value);
+    device->payload.cloud_cover = *value;
+    return result;
 }
 
 /// Tries to retrieve the atmospheric dew point temperature (°C) at the observatory
-AlpacaResult alpaca_observing_conds_dew_point(AlpacaObservingConds *observing_conditions,
-                                              MemoryArena *arena,
-                                              f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "dewpoint", value);
+AlpacaResult alpaca_observing_conds_dew_point(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "dewpoint", value);
+    device->payload.dew_point = *value;
+    return result;
 }
 
 /// Tries to retrieve the atmospheric relative humidity (0 to 100%) at the observatory
-AlpacaResult alpaca_observing_conds_humidity(AlpacaObservingConds *observing_conditions,
-                                             MemoryArena *arena,
-                                             f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "humidity", value);
+AlpacaResult alpaca_observing_conds_humidity(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "humidity", value);
+    device->payload.humidity = *value;
+    return result;
 }
 
 /// Tries to retrieve the atmospheric pressure (hPa) at the observatory
-AlpacaResult alpaca_observing_conds_pressure(AlpacaObservingConds *observing_conditions,
-                                             MemoryArena *arena,
-                                             f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "pressure", value);
+AlpacaResult alpaca_observing_conds_pressure(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "pressure", value);
+    device->payload.pressure = *value;
+    return result;
 }
 
 /// Tries to retrieve the rain rate (mm/hr) at the observatory
-AlpacaResult alpaca_observing_conds_rain_rate(AlpacaObservingConds *observing_conditions,
-                                              MemoryArena *arena,
-                                              f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "rainrate", value);
+AlpacaResult alpaca_observing_conds_rain_rate(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "rainrate", value);
+    device->payload.rain_rate = *value;
+    return result;
 }
 
 /// Tries to retrieve the sky brightness (lux) at the observatory
-AlpacaResult alpaca_observing_conds_sky_brightness(AlpacaObservingConds *observing_conditions,
-                                                   MemoryArena *arena,
-                                                   f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "skybrightness", value);
+AlpacaResult alpaca_observing_conds_sky_brightness(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "skybrightness", value);
+    device->payload.sky_brightness = *value;
+    return result;
 }
 
 /// Tries to retrieve the sky quality (mag per sq-arcsec) at the observatory
-/// @param observing_conditions The observing conditions device
-/// @param arena The memory arena for the request
-/// @param value The value that will be set
-/// @return A result
-AlpacaResult alpaca_observing_conds_sky_quality(AlpacaObservingConds *observing_conditions,
-                                                MemoryArena *arena,
-                                                f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "skyquality", value);
+AlpacaResult alpaca_observing_conds_sky_quality(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "skyquality", value);
+    device->payload.sky_quality = *value;
+    return result;
 }
 
 /// Tries to retrieve the sky temperature (°C) at the observatory
-AlpacaResult alpaca_observing_conds_sky_temperature(AlpacaObservingConds *observing_conditions,
-                                                    MemoryArena *arena,
-                                                    f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "skytemperature", value);
+AlpacaResult alpaca_observing_conds_sky_temperature(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "skytemperature", value);
+    device->payload.sky_temperature = *value;
+    return result;
 }
 
 /// Tries to retrieve the seeting at the observatory measured as star full width half maximum (arcsec)
-AlpacaResult alpaca_observing_conds_star_fwhm(AlpacaObservingConds *observing_conditions,
-                                              MemoryArena *arena,
-                                              f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "starfwhm", value);
+AlpacaResult alpaca_observing_conds_star_fwhm(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "starfwhm", value);
+    device->payload.star_fwhm = *value;
+    return result;
 }
 
 /// Tries to retrieve the temperature (°C) at the observatory
-AlpacaResult alpaca_observing_conds_temperature(AlpacaObservingConds *observing_conditions,
-                                                MemoryArena *arena,
-                                                f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "temperature", value);
+AlpacaResult alpaca_observing_conds_temperature(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "temperature", value);
+    device->payload.temperature = *value;
+    return result;
 }
 
 /// Tries to retrieve the wind direction (°) at the observatory
-AlpacaResult alpaca_observing_conds_wind_direction(AlpacaObservingConds *observing_conditions,
-                                                   MemoryArena *arena,
-                                                   f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "winddirection", value);
+AlpacaResult alpaca_observing_conds_wind_direction(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "winddirection", value);
+    device->payload.wind_direction = *value;
+    return result;
 }
 
 /// Tries to retrieve the peak three second wind gust (m/s) at the observatory over the last two minutes
-AlpacaResult alpaca_observing_conds_wind_gust(AlpacaObservingConds *observing_conditions,
-                                              MemoryArena *arena,
-                                              f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "windgust", value);
+AlpacaResult alpaca_observing_conds_wind_gust(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "windgust", value);
+    device->payload.wind_gust = *value;
+    return result;
 }
 
 /// Tries to retrieve the wind speed (m/s) at the observatory
-AlpacaResult alpaca_observing_conds_wind_speed(AlpacaObservingConds *observing_conditions,
-                                               MemoryArena *arena,
-                                               f64 *value) {
-    return alpaca_device_get_f64(&observing_conditions->device, arena, "windspeed", value);
+AlpacaResult alpaca_observing_conds_wind_speed(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
+    AlpacaResult result = alpaca_device_get_f64(device, arena, "windspeed", value);
+    device->payload.wind_speed = *value;
+    return result;
 }

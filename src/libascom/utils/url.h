@@ -21,18 +21,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "telescope.h"
+#ifndef ASCOM_URL_H
+#define ASCOM_URL_H
 
-/// Tries to retrieve the mount's current altitude (°) above the horizon
-AlpacaResult alpaca_telescope_altitude(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "altitude", value);
-    device->payload.altitude = *value;
-    return result;
-}
+#include <libcore/string.h>
 
-/// Tries to retrieve the mount's current azimuth (°)
-AlpacaResult alpaca_telescope_azimuth(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "azimuth", value);
-    device->payload.azimuth = *value;
-    return result;
-}
+/// Builds the path URL for the specified base URL using memory from the provided arena
+/// @param base The base URL (e.g. 'http://localhost')
+/// @param arena The memory arena for the string allocation
+/// @param url The string where the combined URL should be written to
+/// @param path The path of the URL (e.g. 'management/v1/configureddevices')
+void alpaca_make_path_url(StringView *base, MemoryArena *arena, String *url, const char *path);
+
+#endif// ASCOM_URL_H

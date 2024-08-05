@@ -21,18 +21,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "telescope.h"
+#ifndef ASCOM_CLIENT_H
+#define ASCOM_CLIENT_H
 
-/// Tries to retrieve the mount's current altitude (°) above the horizon
-AlpacaResult alpaca_telescope_altitude(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "altitude", value);
-    device->payload.altitude = *value;
-    return result;
-}
+#include <libcore/string.h>
+#include <libcore/types.h>
 
-/// Tries to retrieve the mount's current azimuth (°)
-AlpacaResult alpaca_telescope_azimuth(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "azimuth", value);
-    device->payload.azimuth = *value;
-    return result;
-}
+#include "device.h"
+
+/// The alpaca client enables querying of non-device endpoints.
+/// It also provides functionality to retrieve all configured
+/// devices from the specified alpaca server.
+typedef struct AlpacaClient {
+    /// The server URL
+    char server[256];
+
+    /// The unique client ID
+    u32 id;
+
+    /// The client transaction ID
+    u32 tx_id;
+
+    /// Lock for synchronisation
+    Mutex *mutex;
+} AlpacaClient;
+
+/// Creates a new alpaca client with the given server URL
+/// @param client The alpaca client handle
+/// @param server The alpaca server URL
+void alpaca_client_make(AlpacaClient *client, StringView *server);
+
+/// Destroys the alpaca client
+/// @param client The alpaca client handle
+void alpaca_client_destroy(AlpacaClient *client);
+
+/// Queries all configured devices from the alpaca client
+/// @param client The alpaca client
+/// @param devices The device list
+/// @return A result
+AlpacaResult alpaca_client_devices(AlpacaClient *client, AlpacaDeviceList *devices);
+
+#endif// ASCOM_CLIENT_H

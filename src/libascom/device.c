@@ -24,14 +24,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "alpaca.h"
 #include "device.h"
+#include "http/client.h"
+#include "utils/cJSON_Helper.h"
+#include "utils/url.h"
 
 #include <libcore/string.h>
 #include <solaris/arena.h>
-#include "libascom/alpaca.h"
-#include "libascom/http/client.h"
-#include "libascom/utils/cJSON.h"
-#include "libascom/utils/cJSON_Helper.h"
 
 /// Retrieves the string representation of the provided device type
 static const char *alpaca_device_type_to_string(AlpacaDeviceType type) {
@@ -47,20 +47,19 @@ static const char *alpaca_device_type_to_string(AlpacaDeviceType type) {
 }
 
 /// Builds the base URL for the device
-static usize alpaca_device_make_base_url_internal(AlpacaDevice *device,
-                                                  StringView *address,
-                                                  char *buffer,
-                                                  usize length) {
+static usize alpaca_device_make_base_url_internal(AlpacaDevice *device, StringView *address, String *buffer) {
     const char *path = "%.*s/api/v%d/%s/%d";
     const char *type = alpaca_device_type_to_string(device->type);
-    return snprintf(buffer, length, path, address->length, address->data, device->api_version, type, device->number);
+    return snprintf(buffer->base, buffer->length, path, address->length, address->data, ALPACA_API_VERSION, type,
+                    device->number);
 }
 
 /// Builds the base URL for the device
 static void alpaca_device_make_base_url(AlpacaDevice *device, StringView *address) {
-    usize length = alpaca_device_make_base_url_internal(device, address, nil, 0);
+    String empty = { 0 };
+    usize length = alpaca_device_make_base_url_internal(device, address, &empty);
     device->base_url = string_new_empty(&device->arena, length + 1);
-    alpaca_device_make_base_url_internal(device, address, device->base_url.base, device->base_url.length);
+    alpaca_device_make_base_url_internal(device, address, &device->base_url);
 }
 
 /// Adds the client headers to the data that gets sent to the device
@@ -69,53 +68,35 @@ static void alpaca_device_add_client_headers(AlpacaDevice *device, cJSON *data) 
     cJSON_AddNumberToObject(data, "ClientID", device->client_id);
 }
 
-/// Builds the attribute URL for the device
-static usize alpaca_device_make_attribute_url_internal(AlpacaDevice *device,
-                                                       const char *attribute,
-                                                       char *buffer,
-                                                       usize length) {
-    const char *path = "%.*s/%s";
-    return snprintf(buffer, length, path, device->base_url.length, device->base_url.base, attribute);
-}
-
-/// Builds the attribute URL for the device
-static void alpaca_device_make_attribute_url(AlpacaDevice *device,
-                                             MemoryArena *arena,
-                                             String *url,
-                                             const char *attribute) {
-    usize length = alpaca_device_make_attribute_url_internal(device, attribute, nil, 0);
-    *url = string_new_empty(arena, length + 1);
-    alpaca_device_make_attribute_url_internal(device, attribute, url->base, url->length);
-}
-
-/// Retrieves the result from the provided response
-static AlpacaResponse alpaca_device_make_response(String *response) {
-    AlpacaResult result = { 0 };
-
-    cJSON *data = cJSON_ParseWithLength(response->base, response->length);
-    result.client_tx_id = cJSON_GetNumberByName(data, "ClientTransactionID");
-    result.server_tx_id = cJSON_GetNumberByName(data, "ServerTransactionID");
-    result.err_number = (AlpacaError) cJSON_GetNumberByName(data, "ErrorNumber");
-
-    AlpacaResponse request_result = { 0 };
-    request_result.result = result;
-    request_result.value = cJSON_GetObjectItem(data, "Value");
-    return request_result;
+/// Retrieves the device type from a string representation
+AlpacaDeviceType alpaca_device_type_make(StringView *type) {
+    StringView telescope = string_view_from_native("Telescope");
+    StringView observing_conds = string_view_from_native("ObservingConditions");
+    if (string_view_equal(type, &telescope)) {
+        return ALPACA_DEVICE_TYPE_TELESCOPE;
+    }
+    if (string_view_equal(type, &observing_conds)) {
+        return ALPACA_DEVICE_TYPE_OBSERVING_CONDITIONS;
+    }
+    return ALPACA_DEVICE_TYPE_NONE;
 }
 
 /// Creates a new alpaca device
-void alpaca_device_make(AlpacaDevice *device, AlpacaDeviceType type, StringView *address, u32 number) {
+void alpaca_device_make(AlpacaDevice *device,
+                        AlpacaDeviceType type,
+                        StringView *address,
+                        StringView *name,
+                        u32 number) {
     device->arena = memory_arena_identity(ALIGNMENT1);
     device->type = type;
     device->number = number;
-    device->api_version = ALPACA_API_VERSION;
 
     srand(time(nil));
-    device->client_id = rand() % (1 << 16);
     device->client_tx_id = 1;
 
     device->mutex = mutex_new();
     alpaca_device_make_base_url(device, address);
+    device->name = string_new(&device->arena, name->data, name->length);
 }
 
 /// Destroys the alpaca device
@@ -134,19 +115,21 @@ AlpacaResponse alpaca_device_get(AlpacaDevice *device, MemoryArena *arena, const
     device->client_tx_id++;
 
     String url = { 0 };
-    alpaca_device_make_attribute_url(device, arena, &url, attribute);
+    StringView base = string_view_make(device->base_url.base, device->base_url.length);
+    alpaca_make_path_url(&base, arena, &url, attribute);
 
     // Execute the HTTP request
     HttpResponse response = { 0 };
     if (!http_client_get(&response, arena, url.base)) {
-        // If the request fails, we must create some invalid alpaca result
+        // If the request fails, we must create a failed alpaca result
         AlpacaResponse result = { 0 };
-        alpaca_response_make(&result, ALPACA_BAD_REQUEST, device->client_tx_id, 0, ALPACA_ERROR_VALUE_NOT_SET, nil);
+        alpaca_response_make_failed(&result);
         mutex_unlock(device->mutex);
         return result;
     }
 
-    AlpacaResponse result = alpaca_device_make_response(&response.body);
+    AlpacaResponse result = { 0 };
+    alpaca_response_make(&result, &response);
     mutex_unlock(device->mutex);
     return result;
 }
@@ -158,7 +141,8 @@ AlpacaResponse alpaca_device_put(AlpacaDevice *device, MemoryArena *arena, const
     device->client_tx_id++;
 
     String url = { 0 };
-    alpaca_device_make_attribute_url(device, arena, &url, attribute);
+    StringView base = string_view_make(device->base_url.base, device->base_url.length);
+    alpaca_make_path_url(&base, arena, &url, attribute);
 
     // NOTE(elias): We might want to move to preallocated buffer inside the provided arena
     StringView payload = string_view_from_native(cJSON_PrintUnformatted(data));
@@ -166,16 +150,18 @@ AlpacaResponse alpaca_device_put(AlpacaDevice *device, MemoryArena *arena, const
     // Execute the HTTP request
     HttpResponse response = { 0 };
     if (!http_client_put(&response, arena, url.base, &payload)) {
-        // If the request fails, we must create some invalid alpaca result
+        // Free allocated payload
         free((void *) payload.data);
+        // If the request fails, we must create a failed alpaca result
         AlpacaResponse result = { 0 };
-        alpaca_response_make(&result, ALPACA_BAD_REQUEST, device->client_tx_id, 0, ALPACA_ERROR_VALUE_NOT_SET, nil);
+        alpaca_response_make_failed(&result);
         mutex_unlock(device->mutex);
         return result;
     }
 
     free((void *) payload.data);
-    AlpacaResponse result = alpaca_device_make_response(&response.body);
+    AlpacaResponse result = { 0 };
+    alpaca_response_make(&result, &response);
     mutex_unlock(device->mutex);
     return result;
 }
@@ -205,4 +191,46 @@ AlpacaResult alpaca_device_get_bool(AlpacaDevice *device, MemoryArena *arena, co
     AlpacaResult result = response.result;
     alpaca_response_destroy(&response);
     return result;
+}
+
+/// Creates a new alpaca device list
+void alpaca_device_list_make(AlpacaDeviceList *list) {
+    list->arena = memory_arena_identity(ALIGNMENT1);
+}
+
+/// Appends an alpaca device to the list
+void alpaca_device_list_append(AlpacaDeviceList *list, AlpacaDevice *device) {
+    if (list->count == list->reserved) {
+        list->reserved *= 2;
+        AlpacaDevice *copied = (AlpacaDevice *) memory_arena_alloc(&list->arena, list->reserved);
+        for (usize i = 0; i < list->count; ++i) {
+            copied[i] = list->devices[i];
+        }
+        list->devices = copied;
+    }
+
+    list->devices[list->count] = *device;
+    list->count++;
+}
+
+/// Clears the device list
+void alpaca_device_list_clear(AlpacaDeviceList *list) {
+    list->count = 0;
+    list->reserved = 0;
+    list->devices = nil;
+    memory_arena_clear(&list->arena);
+}
+
+/// Reserves space for the provided amount of devices
+void alpaca_device_list_reserve(AlpacaDeviceList *list, usize count) {
+    list->devices = (AlpacaDevice *) memory_arena_alloc(&list->arena, sizeof(AlpacaDevice) * count);
+}
+
+/// Destroys the alpaca device list and the associated devices
+void alpaca_device_list_destroy(AlpacaDeviceList *list) {
+    for (usize i = 0; i < list->count; ++i) {
+        alpaca_device_destroy(list->devices + i);
+    }
+    list->devices = nil;
+    memory_arena_destroy(&list->arena);
 }

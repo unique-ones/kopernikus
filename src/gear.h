@@ -24,52 +24,20 @@
 #ifndef KOPERNIKUS_GEAR_H
 #define KOPERNIKUS_GEAR_H
 
+#include <libascom/client.h>
 #include <libascom/observing_conditions.h>
 #include <libascom/telescope.h>
 
-/// Telescope specific data
-typedef struct TelescopeData {
-    f64 altitude;
-    f64 azimuth;
-} TelescopeData;
-
-/// Observing conditions data
-typedef struct ObservingCondsData {
-    f64 average_period;
-    f64 cloud_cover;
-    f64 dew_point;
-    f64 humidity;
-    f64 pressure;
-    f64 rain_rate;
-    f64 sky_brightness;
-    f64 sky_quality;
-    f64 sky_temperature;
-    f64 star_fwhm;
-    f64 temperature;
-    f64 wind_direction;
-    f64 wind_gust;
-    f64 wind_speed;
-} ObservingCondsData;
-
-/// All gear data
-typedef struct GearData {
-    TelescopeData telescope;
-    ObservingCondsData observing_conds;
-} GearData;
-
 /// Gear collects data from the alpaca devices
 typedef struct Gear {
-    /// The telescope device handle
-    AlpacaTelescope *telescope;
+    /// The alpaca client
+    AlpacaClient *client;
 
-    /// The observing conditions device handle
-    AlpacaObservingConds *observing_conds;
+    /// The memory arena
+    MemoryArena arena;
 
-    /// The arena for the devices
-    MemoryArena device_arena;
-
-    /// The actual data collected from the different devices
-    GearData data;
+    /// The devices
+    AlpacaDeviceList devices;
 
     /// The sampling interval
     f64 sampling_interval;

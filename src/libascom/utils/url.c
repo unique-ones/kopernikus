@@ -21,18 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "telescope.h"
+#include <stdio.h>
 
-/// Tries to retrieve the mount's current altitude (°) above the horizon
-AlpacaResult alpaca_telescope_altitude(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "altitude", value);
-    device->payload.altitude = *value;
-    return result;
+#include "url.h"
+
+/// Builds the path URL for the specified base URL using the provided buffer
+static usize alpaca_make_path_url_internal(StringView *base, const char *path, String *buffer) {
+    const char *fmt = "%.*s/%s";
+    return snprintf(buffer->base, buffer->length, fmt, base->length, base->data, path);
 }
 
-/// Tries to retrieve the mount's current azimuth (°)
-AlpacaResult alpaca_telescope_azimuth(AlpacaDevice *device, MemoryArena *arena, f64 *value) {
-    AlpacaResult result = alpaca_device_get_f64(device, arena, "azimuth", value);
-    device->payload.azimuth = *value;
-    return result;
+/// Builds the path URL for the specified base URL using memory from the provided arena
+void alpaca_make_path_url(StringView *base, MemoryArena *arena, String *url, const char *path) {
+    String empty = { 0 };
+    usize length = alpaca_make_path_url_internal(base, path, &empty);
+    *url = string_new_empty(arena, length + 1);
+    alpaca_make_path_url_internal(base, path, url);
 }

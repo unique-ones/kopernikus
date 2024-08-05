@@ -31,15 +31,43 @@
 #include <libcore/string.h>
 #include <libcore/types.h>
 
-enum {
-    ALPACA_API_VERSION = 1
-};
-
 typedef enum AlpacaDeviceType {
     ALPACA_DEVICE_TYPE_NONE = 0,
     ALPACA_DEVICE_TYPE_OBSERVING_CONDITIONS,
     ALPACA_DEVICE_TYPE_TELESCOPE,
 } AlpacaDeviceType;
+
+/// Retrieves the device type from a string representation
+/// @param type String representation of the type
+/// @return The alpaca device type
+AlpacaDeviceType alpaca_device_type_make(StringView *type);
+
+/// The payload of the alpaca device, represents the last known state
+typedef union AlpacaDevicePayload {
+    /// Observing Conditions data
+    struct {
+        f64 average_period;
+        f64 cloud_cover;
+        f64 dew_point;
+        f64 humidity;
+        f64 pressure;
+        f64 rain_rate;
+        f64 sky_brightness;
+        f64 sky_quality;
+        f64 sky_temperature;
+        f64 star_fwhm;
+        f64 temperature;
+        f64 wind_direction;
+        f64 wind_gust;
+        f64 wind_speed;
+    };
+
+    /// Telescope specific data
+    struct {
+        f64 altitude;
+        f64 azimuth;
+    };
+} AlpacaDevicePayload;
 
 typedef struct AlpacaDevice {
     /// One of the recognised ASCOM device types
@@ -48,12 +76,12 @@ typedef struct AlpacaDevice {
     /// Zero based device number as set on the server
     u32 number;
 
-    /// Alpaca API version
-    u32 api_version;
-
     /// The base url is used for all actions and therefore
     /// stored within the device
     String base_url;
+
+    /// The name of the device
+    String name;
 
     /// The ID of the client
     u32 client_id;
@@ -64,6 +92,9 @@ typedef struct AlpacaDevice {
     /// Lock in order to enable thread-safety
     Mutex *mutex;
 
+    /// The payload
+    AlpacaDevicePayload payload;
+
     /// The device arena for internal allocations
     MemoryArena arena;
 } AlpacaDevice;
@@ -72,8 +103,9 @@ typedef struct AlpacaDevice {
 /// @param device The alpaca device handle
 /// @param type One of the recognised ASCOM device types
 /// @param address The address of the alpaca server, can also specify port if needed
-/// @param Zero based device number as set on the server
-void alpaca_device_make(AlpacaDevice *device, AlpacaDeviceType type, StringView *address, u32 number);
+/// @param name The name of the device
+/// @param number Zero based device number as set on the server
+void alpaca_device_make(AlpacaDevice *device, AlpacaDeviceType type, StringView *address, StringView *name, u32 number);
 
 /// Destroys the alpaca device
 /// @param device The alpaca device handle
@@ -120,5 +152,34 @@ AlpacaResult alpaca_device_get_s64(AlpacaDevice *device, MemoryArena *arena, con
 /// @param attribute The attribute to get from the server
 /// @return A result
 AlpacaResult alpaca_device_get_bool(AlpacaDevice *device, MemoryArena *arena, const char *attribute, b8 *value);
+
+typedef struct AlpacaDeviceList {
+    MemoryArena arena;
+    AlpacaDevice *devices;
+    usize count;
+    usize reserved;
+} AlpacaDeviceList;
+
+/// Creates a new alpaca device list
+/// @param list The device list
+void alpaca_device_list_make(AlpacaDeviceList *list);
+
+/// Appends an alpaca device to the list
+/// @param list The device list
+/// @param device The alpaca device
+void alpaca_device_list_append(AlpacaDeviceList *list, AlpacaDevice *device);
+
+/// Clears the device list
+/// @param list The device list
+void alpaca_device_list_clear(AlpacaDeviceList *list);
+
+/// Reserves space for the provided amount of devices
+/// @param list The device list
+/// @param count The device count
+void alpaca_device_list_reserve(AlpacaDeviceList *list, usize count);
+
+/// Destroys the alpaca device list and the associated devices
+/// @param list The device list
+void alpaca_device_list_destroy(AlpacaDeviceList *list);
 
 #endif// ASCOM_DEVICE_H
