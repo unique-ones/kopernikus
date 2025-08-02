@@ -4,6 +4,8 @@
 Plank. While the original desktop application
 served its purpose, it is time for a rewrite.
 
+![preview](doc/preview.png)
+
 ## Features
 
 Development on kopernikus is active, the following features are currently planned:
