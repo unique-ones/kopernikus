@@ -39,50 +39,17 @@ static void display_framebuffer_callback(GLFWwindow *handle, s32 width, s32 heig
     glViewport(0, 0, width, height);
 }
 
-/// Converts OpenGL severities to meaningful strings
-static const char *severity_string(u32 severity) {
-    switch (severity) {
-        case GL_DEBUG_SEVERITY_HIGH: {
-            return "HIGH_SEVERITY";
-        }
-        case GL_DEBUG_SEVERITY_MEDIUM: {
-            return "MEDIUM_SEVERITY";
-        }
-        case GL_DEBUG_SEVERITY_LOW: {
-            return "LOW_SEVERITY";
-        }
-        case GL_DEBUG_SEVERITY_NOTIFICATION: {
-            return "NOTIFICATION_SEVERITY";
-        }
-        default: {
-            return "UNKNOWN_SEVERITY";
-        }
-    }
-}
-
-/// OpenGL error callback function
-static void
-display_error_callback(u32 source, u32 type, u32 id, u32 severity, s32 length, const char *message, const void *user) {
-    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
-        return;
-    }
-
-    if (type == GL_DEBUG_TYPE_ERROR) {
-        fprintf(stderr, "error: %d, severity => %s, message = %s\n", type, severity_string(severity), message);
-    } else {
-        fprintf(stderr, "warning: %d, severity => %s, message = %s\n", type, severity_string(severity), message);
-    }
-}
-
 /// Creates a new window and a corresponding OpenGL context
 b8 display_create(Display *self, const char *title, u32 width, u32 height) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     self->handle = glfwCreateWindow((int) width, (int) height, title, nil, nil);
+    // Context is set later on
+    self->context = nil;
     self->running = true;
     self->width = width;
     self->height = height;
@@ -102,8 +69,6 @@ b8 display_create(Display *self, const char *title, u32 width, u32 height) {
     glfwSetInputMode(self->handle, GLFW_STICKY_KEYS, GLFW_TRUE);
     glfwSetWindowUserPointer(self->handle, self);
     glfwSetFramebufferSizeCallback(self->handle, display_framebuffer_callback);
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(display_error_callback, nil);
 
     instance = self;
     return true;

@@ -26,10 +26,12 @@
 
 #include "types.h"
 
+#include <cimgui.h>
 #include <GLFW/glfw3.h>
 
 typedef struct Display {
     GLFWwindow *handle;
+    ImGuiContext *context;
     u32 width;
     u32 height;
     f64 time;

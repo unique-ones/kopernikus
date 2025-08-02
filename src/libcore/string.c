@@ -22,9 +22,91 @@
 // SOFTWARE.
 
 #include <assert.h>
+#include <ctype.h>
 #include <string.h>
 
-#include <libcore/string.h>
+#include "string.h"
+
+/// Creates a nil StringView
+StringView string_view_nil(void) {
+    return (StringView){ .data = nil, .length = 0 };
+}
+
+/// Creates a new StringView instance
+StringView string_view_make(const char* str, ssize length) {
+    StringView result;
+    result.data = str;
+    result.length = length;
+    return result;
+}
+
+/// Retrieves the length of a zero terminated C string
+ssize zero_string_length(const char* str) {
+    if (str == nil) {
+        return -1;
+    }
+
+    ssize index = 0;
+    while (str[index++] != 0) { }
+    return index;
+}
+
+/// Creates a new StringView instance from a zero terminated C string
+StringView string_view_from_native(const char* str) {
+    return (StringView){ .data = str, .length = zero_string_length(str) };
+}
+
+/// Checks whether the provided StringViews are equal in terms of
+b8 string_view_equal(StringView const* const left, StringView const* const right) {
+    if (left->length != right->length) {
+        return false;
+    }
+
+    for (ssize i = 0; i < left->length; ++i) {
+        if (left->data[i] != right->data[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// Creates a substring
+StringView string_view_substring(StringView const * view, ssize const offset, ssize const length) {
+    if (offset + length > view->length) {
+        assert(false && "runtime check failed: substring out of bounds!");
+    }
+    return string_view_make(view->data + offset, length);
+}
+
+/// Retrieves the leftmost index of the specified symbol in the view
+ssize string_view_index_of(StringView const * view, char const symbol) {
+    for (ssize i = 0; i < view->length; i++) {
+        if (view->data[i] == symbol) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/// Checks whether the provided hay StringView contains the needle, without case sensitivity
+b8 string_view_contains(StringView const * hay, StringView const * needle) {
+    for (ssize hay_index = 0; hay_index < hay->length; ++hay_index) {
+        b8 contains = true;
+        if (hay->length - hay_index < needle->length) {
+            return false;
+        }
+        for (ssize needle_index = 0; needle_index < needle->length; ++needle_index) {
+            if (tolower(needle->data[needle_index]) != tolower(hay->data[hay_index + needle_index])) {
+                contains = false;
+                break;
+            }
+        }
+        if (contains) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /// Creates a nil String
 String string_nil(void) {

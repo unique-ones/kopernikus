@@ -44,23 +44,25 @@ const char* http_response_code_to_string(HttpResponseCode code) {
 }
 
 /// CURL write function for the HttpClient
-static usize http_client_write(u8* content, usize size, usize member_size, StringBuffer* buffer) {
-    usize curl_length = size * member_size;
-    char* tmp = realloc(buffer->data, buffer->size + curl_length);
+static size_t http_client_write(char* const buffer, size_t const size, size_t const member_size, void* out_stream) {
+    StringBuffer *out = (StringBuffer*) out_stream;
+    size_t const curl_length = size * member_size;
+    char* tmp = realloc(out->data, out->size + curl_length);
     ASSERT(tmp != nil, "[http] could not allocate write buffer!")
-    buffer->data = tmp;
-    memcpy(buffer->data + buffer->size, content, curl_length);
-    buffer->size += (ssize) curl_length;
+    out->data = tmp;
+    memcpy(out->data + out->size, buffer, curl_length);
+    out->size += (ssize) curl_length;
     return curl_length;
 }
 
 /// CURL read function for the HttpClient
-static usize http_client_read(u8* content, usize size, usize member_size, StringView* data) {
-    usize curl_length = size * member_size;
-    usize length = (data->length < curl_length) ? data->length : curl_length;
-    memcpy(content, data->data, length);
-    data->data += length;
-    data->length += (ssize) length;
+static size_t http_client_read(char* buffer, size_t size, size_t member_size, void* in_stream) {
+    StringView *in = (StringView*) in_stream;
+    size_t curl_length = size * member_size;
+    size_t length = (in->length < curl_length) ? in->length : curl_length;
+    memcpy(buffer, in->data, length);
+    in->data += length;
+    in->length += (ssize) length;
     return length;
 }
 
@@ -70,7 +72,7 @@ b8 http_client_get(HttpResponse* response, MemoryArena* arena, const char* url) 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_client_write);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_client_read);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
+    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
     StringBuffer header_buffer = { 0 }, body_buffer = { 0 };
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_buffer);
@@ -111,9 +113,9 @@ b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, 
     struct curl_slist* headers = nil;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE, data->length);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE, (long) data->length);
     curl_easy_setopt(curl, CURLOPT_READDATA, data);
 
     StringBuffer header_buffer = { 0 }, body_buffer = { 0 };
@@ -129,10 +131,10 @@ b8 http_client_put(HttpResponse* response, MemoryArena* arena, const char* url, 
         return false;
     }
 
-    String header = string_new(arena, header_buffer.data, header_buffer.size);
+    String const header = string_new(arena, header_buffer.data, header_buffer.size);
     free(header_buffer.data);
 
-    String body = string_new(arena, body_buffer.data, body_buffer.size);
+    String const body = string_new(arena, body_buffer.data, body_buffer.size);
     free(body_buffer.data);
 
     long response_code;

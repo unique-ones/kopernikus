@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stddef.h>
 
 #include "gpu.h"
 #include "log.h"
@@ -32,7 +32,7 @@
 // SHADER SOURCE MACRO HELPERS
 // ===================================================================================
 
-#define SHADER_VERSION "#version 450 core\n"
+#define SHADER_VERSION "#version 410 core\n"
 #define DEFINE_SHADER_VARIABLE_IMPL(type, name) static type name
 #define DEFINE_SHADER_VARIABLE(type, name) DEFINE_SHADER_VARIABLE_IMPL(type, name)
 #define DEFINE_SHADER_IMPL(type, source) DEFINE_SHADER_VARIABLE(const char *, type) = SHADER_VERSION #source
@@ -76,8 +76,8 @@ void main() {
 // ===================================================================================
 
 /// Compiles the given shader source to a shader program
-static u32 shader_compile(const char *source, u32 type) {
-    u32 program = glCreateShader(type);
+static u32 shader_compile(const char *source, u32 const type) {
+    u32 const program = glCreateShader(type);
     const GLchar *shader_source = source;
     glShaderSource(program, 1, &shader_source, nil);
     glCompileShader(program);
@@ -157,71 +157,71 @@ b8 shader_create(Shader *self, const char *vertex, const char *fragment) {
 }
 
 /// Destroys the specified shader
-void shader_destroy(Shader *self) {
+void shader_destroy(Shader const *self) {
     glDeleteProgram(self->handle);
 }
 
 /// Sets a sampler2d (texture) uniform
-void shader_uniform_sampler(Shader *self, const char *name, u32 slot) {
+void shader_uniform_sampler(Shader const *self, const char *name, u32 const slot) {
     shader_uniform_s32(self, name, (s32) slot);
 }
 
 /// Sets an integer (s32) uniform
-void shader_uniform_s32(Shader *self, const char *name, s32 value) {
+void shader_uniform_s32(Shader const *self, const char *name, s32 const value) {
     glUseProgram(self->handle);
     glUniform1i(glGetUniformLocation(self->handle, name), value);
 }
 
 /// Sets a 2d-integer (Vector2s) uniform
-void shader_uniform_vector2s(Shader *self, const char *name, Vector2s *value) {
+void shader_uniform_vector2s(Shader const *self, const char *name, Vector2s const *value) {
     glUseProgram(self->handle);
     glUniform2i(glGetUniformLocation(self->handle, name), value->x, value->y);
 }
 
 /// Sets a 3d-integer (Vector3s) uniform
-void shader_uniform_vector3s(Shader *self, const char *name, Vector3s *value) {
+void shader_uniform_vector3s(Shader const *self, const char *name, Vector3s const *value) {
     glUseProgram(self->handle);
     glUniform3i(glGetUniformLocation(self->handle, name), value->x, value->y, value->z);
 }
 
 /// Sets a 4d-integer (Vector4s) uniform
-void shader_uniform_vector4s(Shader *self, const char *name, Vector4s *value) {
+void shader_uniform_vector4s(Shader const *self, const char *name, Vector4s const *value) {
     glUseProgram(self->handle);
     glUniform4i(glGetUniformLocation(self->handle, name), value->x, value->y, value->z, value->w);
 }
 
 /// Sets a float (f32) uniform
-void shader_uniform_f32(Shader *self, const char *name, f32 value) {
+void shader_uniform_f32(Shader const *self, const char *name, f32 const value) {
     glUseProgram(self->handle);
     glUniform1f(glGetUniformLocation(self->handle, name), value);
 }
 
 /// Sets a 2d-float (Vector2f) uniform
-void shader_uniform_vector2f(Shader *self, const char *name, Vector2f *value) {
+void shader_uniform_vector2f(Shader const *self, const char *name, Vector2f const *value) {
     glUseProgram(self->handle);
     glUniform2f(glGetUniformLocation(self->handle, name), value->x, value->y);
 }
 
 /// Sets a 3d-float (Vector3f) uniform
-void shader_uniform_vector3f(Shader *self, const char *name, Vector3f *value) {
+void shader_uniform_vector3f(Shader const *self, const char *name, Vector3f const *value) {
     glUseProgram(self->handle);
     glUniform3f(glGetUniformLocation(self->handle, name), value->x, value->y, value->z);
 }
 
 /// Sets a 4d-float (Vector4f) uniform
-void shader_uniform_vector4f(Shader *self, const char *name, Vector4f *value) {
+void shader_uniform_vector4f(Shader const *self, const char *name, Vector4f const *value) {
     glUseProgram(self->handle);
     glUniform4f(glGetUniformLocation(self->handle, name), value->x, value->y, value->z, value->w);
 }
 
 /// Sets a mat4 (Matrix4x4f) uniform
-void shader_uniform_matrix4x4f(Shader *self, const char *name, Matrix4x4f *value) {
+void shader_uniform_matrix4x4f(Shader const *self, const char *name, Matrix4x4f const *value) {
     glUseProgram(self->handle);
     glUniformMatrix4fv(glGetUniformLocation(self->handle, name), 1, GL_FALSE, &value->value[0].x);
 }
 
 /// Binds the specified shader
-void shader_bind(Shader *self) {
+void shader_bind(Shader const *self) {
     glUseProgram(self->handle);
 }
 
@@ -231,7 +231,7 @@ void shader_unbind(void) {
 }
 
 /// Retrieves the stride of the specified ShaderType
-static s32 shader_type_stride(ShaderType type) {
+static s32 shader_type_stride(ShaderType const type) {
     switch (type) {
         case INT:
             return sizeof(GLint);
@@ -255,7 +255,7 @@ static s32 shader_type_stride(ShaderType type) {
 }
 
 /// Translates libcore ShaderTypes to OpenGL types
-static s32 shader_type_opengl(ShaderType type) {
+static s32 shader_type_opengl(ShaderType const type) {
     switch (type) {
         case INT:
         case INT2:
@@ -273,7 +273,7 @@ static s32 shader_type_opengl(ShaderType type) {
 }
 
 /// Retrieves the number of primitives a composed ShaderType can hold
-static s32 shader_type_primitives(ShaderType type) {
+static s32 shader_type_primitives(ShaderType const type) {
     switch (type) {
         case INT:
             return 1;
@@ -301,7 +301,7 @@ static s32 shader_type_primitives(ShaderType type) {
 // ===================================================================================
 
 /// Calculates the total stride of the buffer layout
-static s32 vertex_buffer_layout_stride(VertexBufferLayout *layout) {
+static s32 vertex_buffer_layout_stride(VertexBufferLayout const *layout) {
     s32 stride = 0;
     for (u32 i = 0; i < layout->count; i++) {
         ShaderType attribute = *(layout->attributes + i);
@@ -325,7 +325,7 @@ void vertex_buffer_destroy(VertexBuffer *self) {
 }
 
 /// Sets the data for the specified buffer
-void vertex_buffer_data(VertexBuffer *self, const void *data, u32 size) {
+void vertex_buffer_data(VertexBuffer const *self, const void *data, u32 const size) {
     glBindBuffer(GL_ARRAY_BUFFER, self->handle);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 }
@@ -336,7 +336,7 @@ void vertex_buffer_layout(VertexBuffer *self, VertexBufferLayout *layout) {
 }
 
 /// Binds the specified buffer
-void vertex_buffer_bind(VertexBuffer *self) {
+void vertex_buffer_bind(VertexBuffer const *self) {
     glBindBuffer(GL_ARRAY_BUFFER, self->handle);
 }
 
@@ -358,19 +358,19 @@ void index_buffer_create(IndexBuffer *self) {
 }
 
 /// Destroys the index buffer
-void index_buffer_destroy(IndexBuffer *self) {
+void index_buffer_destroy(IndexBuffer const *self) {
     glDeleteBuffers(1, &self->handle);
 }
 
 /// Sets the data for the specified buffer
-void index_buffer_data(IndexBuffer *self, const u32 *data, u32 count) {
+void index_buffer_data(IndexBuffer *self, const u32 *data, u32 const count) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->handle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) (count * sizeof count), data, GL_DYNAMIC_DRAW);
     self->count = count;
 }
 
 /// Binds the specified buffer
-void index_buffer_bind(IndexBuffer *self) {
+void index_buffer_bind(IndexBuffer const *self) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->handle);
 }
 
@@ -393,7 +393,7 @@ void vertex_array_create(VertexArray *self) {
 }
 
 /// Destroys the specified vertex array
-void vertex_array_destroy(VertexArray *self) {
+void vertex_array_destroy(VertexArray const *self) {
     glDeleteVertexArrays(1, &self->handle);
 }
 
@@ -427,7 +427,7 @@ void vertex_array_index_buffer(VertexArray *self, IndexBuffer *index_buffer) {
 }
 
 /// Binds the specified vertex array
-void vertex_array_bind(VertexArray *self) {
+void vertex_array_bind(VertexArray const *self) {
     glBindVertexArray(self->handle);
 }
 
@@ -437,7 +437,7 @@ void vertex_array_unbind(void) {
 }
 
 /// Creates a frame buffer of specified size
-b8 frame_buffer_create(FrameBuffer *self, FrameBufferInfo *spec) {
+b8 frame_buffer_create(FrameBuffer *self, FrameBufferInfo const *spec) {
     self->handle = 0;
     self->texture_handle = 0;
     self->render_handle = 0;
@@ -446,14 +446,14 @@ b8 frame_buffer_create(FrameBuffer *self, FrameBufferInfo *spec) {
 }
 
 /// Destroys the frame buffer
-void frame_buffer_destroy(FrameBuffer *self) {
+void frame_buffer_destroy(FrameBuffer const *self) {
     glDeleteFramebuffers(1, &self->handle);
     glDeleteTextures(1, &self->texture_handle);
     glDeleteRenderbuffers(1, &self->render_handle);
 }
 
 /// Checks if the frame buffer is complete
-static b8 frame_buffer_is_valid(FrameBuffer *buffer) {
+static b8 frame_buffer_is_valid(FrameBuffer const *buffer) {
     frame_buffer_bind(buffer);
     return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
@@ -493,7 +493,7 @@ b8 frame_buffer_invalidate(FrameBuffer *self) {
 }
 
 /// Resizes the frame buffer
-b8 frame_buffer_resize(FrameBuffer *self, s32 width, s32 height) {
+b8 frame_buffer_resize(FrameBuffer *self, s32 const width, s32 const height) {
     if (width <= 0 || height <= 0 || (width == self->spec.width && height == self->spec.height)) {
         return false;
     }
@@ -503,14 +503,15 @@ b8 frame_buffer_resize(FrameBuffer *self, s32 width, s32 height) {
 }
 
 /// Binds the specified frame buffer for rendering
-void frame_buffer_bind(FrameBuffer *self) {
+void frame_buffer_bind(FrameBuffer const *self) {
     glBindFramebuffer(GL_FRAMEBUFFER, self->handle);
     glViewport(0, 0, self->spec.width, self->spec.height);
 }
 
 /// Binds the texture of the frame buffer at the specified sampler slot
-void frame_buffer_bind_texture(FrameBuffer *self, u32 slot) {
-    glBindTextureUnit(slot, self->texture_handle);
+void frame_buffer_bind_texture(FrameBuffer const *self, u32 const slot) {
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, self->texture_handle);
 }
 
 /// Unbinds the currently bound frame buffer
@@ -519,7 +520,7 @@ void frame_buffer_unbind(void) {
 }
 
 /// Creates a new render command
-RenderCommand *render_command_new(MemoryArena *arena, Vertex *vertices, Index *indices) {
+RenderCommand *render_command_new(MemoryArena *arena, Vertex const *vertices, Index const *indices) {
     RenderCommand *self = (RenderCommand *) memory_arena_alloc(arena, sizeof(RenderCommand));
     self->previous = nil;
     self->next = nil;
@@ -566,7 +567,7 @@ void render_group_clear(RenderGroup *self) {
 }
 
 /// Pushes a set of vertices and indices to the render group
-void render_group_push(RenderGroup *self, Vertex *vertices, Index *indices) {
+void render_group_push(RenderGroup *self, Vertex const *vertices, Index const *indices) {
     RenderCommand *command = render_command_new(&self->command_memory, vertices, indices);
     if (self->begin == nil) {
         self->begin = command;
@@ -582,7 +583,7 @@ void render_group_push(RenderGroup *self, Vertex *vertices, Index *indices) {
 }
 
 /// Submits an actual indexed OpenGL draw call to the GPU
-static void renderer_draw_indexed(VertexArray *vertex_array, Shader *shader, u32 mode) {
+static void renderer_draw_indexed(VertexArray const *vertex_array, Shader const *shader, u32 const mode) {
     vertex_array_bind(vertex_array);
     shader_bind(shader);
     glDrawElements(mode, (s32) vertex_array->index_buffer->count, GL_UNSIGNED_INT, NULL);
@@ -595,12 +596,12 @@ void renderer_clear(void) {
 }
 
 /// Sets the clear color
-void renderer_clear_color(Vector4f *color) {
+void renderer_clear_color(Vector4f const *color) {
     glClearColor(color->x, color->y, color->z, color->w);
 }
 
 /// Creates a new renderer and initializes its pipeline
-void renderer_create(Renderer *self, f32 width, f32 height) {
+void renderer_create(Renderer *self, s32 const width, s32 const height) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -630,7 +631,7 @@ void renderer_begin_batch(Renderer *self) {
 }
 
 /// Submits the specified render group and issues an indexed draw call
-static void render_group_submit(RenderGroup *group, Shader *shader) {
+static void render_group_submit(RenderGroup *group, Shader const *shader) {
     if (group->commands == 0) {
         return;
     }
@@ -641,7 +642,7 @@ static void render_group_submit(RenderGroup *group, Shader *shader) {
     Index *indices = (Index *) memory_arena_alloc(&group->command_memory, indices_size * group->commands);
 
     usize insert_index = 0;
-    for (RenderCommand *it = group->begin; it != NULL; it = it->next) {
+    for (RenderCommand const *it = group->begin; it != NULL; it = it->next) {
         memcpy((u8 *) vertices + (ptrdiff_t) (vertices_size * insert_index), it->vertices, vertices_size);
         memcpy((u8 *) indices + (ptrdiff_t) (indices_size * insert_index), it->indices, indices_size);
         insert_index++;
@@ -658,7 +659,7 @@ void renderer_end_batch(Renderer *self) {
 }
 
 /// Indicate to the renderer that a resize is necessary
-void renderer_resize(Renderer *self, s32 width, s32 height) {
+void renderer_resize(Renderer *self, s32 const width, s32 const height) {
     Matrix4x4f orthogonal;
     matrix4x4f_create_orthogonal(&orthogonal, 0.0f, (f32) width, (f32) height, 0.0f);
     shader_uniform_matrix4x4f(&self->shader, "uniform_transform", &orthogonal);
@@ -668,7 +669,7 @@ void renderer_resize(Renderer *self, s32 width, s32 height) {
 }
 
 /// Draws a quad at the given position
-void renderer_draw_quad(Renderer *self, Vector2f *position, Vector2f *size, Vector3f *color) {
+void renderer_draw_quad(Renderer *self, Vector2f const *position, Vector2f const *size, Vector3f const *color) {
     Vertex vertices[] = { { .position = { position->x, position->y }, .color = *color },
                           { .position = { position->x, position->y + size->y }, .color = *color },
                           { .position = { position->x + size->x, position->y + size->y }, .color = *color },
@@ -681,11 +682,11 @@ void renderer_draw_quad(Renderer *self, Vector2f *position, Vector2f *size, Vect
 }
 
 /// Captures all following draw commands into a frame buffer
-void renderer_begin_capture(Renderer *self) {
+void renderer_begin_capture(Renderer const *self) {
     frame_buffer_bind(&self->capture);
 }
 
 /// Ends the capture of draw commands
-void renderer_end_capture(Renderer *self) {
+void renderer_end_capture() {
     frame_buffer_unbind();
 }

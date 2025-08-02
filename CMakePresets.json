@@ -67,6 +67,23 @@
       }
     },
     {
+      "name": "mac",
+      "hidden": true,
+      "inherits": [
+        "default"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "TARGET_BUILD_PLATFORM": "mac"
+      }
+    },
+    {
       "name": "win-64-debug",
       "inherits": [
         "win",
@@ -91,6 +108,20 @@
       "name": "lin-64-release",
       "inherits": [
         "lin",
+        "release"
+      ]
+    },
+    {
+      "name": "mac-64-debug",
+      "inherits": [
+        "mac",
+        "debug"
+      ]
+    },
+    {
+      "name": "mac-64-release",
+      "inherits": [
+        "mac",
         "release"
       ]
     }
@@ -106,28 +137,72 @@
       "configurePreset": "win-64-debug",
       "inherits": [
         "default"
-      ]
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     },
     {
       "name": "win-64-release",
       "configurePreset": "win-64-release",
       "inherits": [
         "default"
-      ]
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     },
     {
       "name": "lin-64-debug",
       "configurePreset": "lin-64-debug",
       "inherits": [
         "default"
-      ]
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     },
     {
       "name": "lin-64-release",
       "configurePreset": "lin-64-release",
       "inherits": [
         "default"
-      ]
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "mac-64-debug",
+      "configurePreset": "mac-64-debug",
+      "inherits": [
+        "default"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "mac-64-release",
+      "configurePreset": "mac-64-release",
+      "inherits": [
+        "default"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
     }
   ]
 }

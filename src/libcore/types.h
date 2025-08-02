@@ -26,8 +26,8 @@
 
 #include <glad/glad.h>
 #include <inttypes.h>
+#include <solaris/time.h>
 #include <solaris/types.h>
-#include "solaris/time.h"
 
 typedef float f32;
 

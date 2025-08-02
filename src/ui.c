@@ -43,8 +43,9 @@
 static const char *UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
 
 
-static void ui_setup_style(void) {
-    ImGuiIO *io = igGetIO();
+static void ui_setup_style(Display const *display) {
+    ImGuiIO *io = igGetIO_ContextPtr(display->context);
+    igGetIO_Nil();
 
     static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
     ImFontConfig icons = { 0 };
@@ -53,6 +54,7 @@ static void ui_setup_style(void) {
     icons.OversampleV = 1;
     icons.GlyphMaxAdvanceX = FLT_MAX;
     icons.RasterizerMultiply = 1.0f;
+    icons.RasterizerDensity = 1.0f;
     icons.EllipsisChar = (ImWchar) -1;
     icons.MergeMode = true;
     icons.PixelSnapH = true;
@@ -105,9 +107,9 @@ static void ui_setup_style(void) {
     // Tabs
     style->Colors[ImGuiCol_Tab] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
     style->Colors[ImGuiCol_TabHovered] = (ImVec4){ 0.24f, 0.24f, 0.32f, 1.0f };
-    style->Colors[ImGuiCol_TabActive] = (ImVec4){ 0.2f, 0.22f, 0.27f, 1.0f };
-    style->Colors[ImGuiCol_TabUnfocused] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_TabUnfocusedActive] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TabSelected] = (ImVec4){ 0.2f, 0.22f, 0.27f, 1.0f };
+    style->Colors[ImGuiCol_TabDimmed] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TabDimmedSelected] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Title
     style->Colors[ImGuiCol_TitleBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
@@ -152,19 +154,19 @@ static void ui_setup_style(void) {
 
 /// Initializes the ui
 void ui_initialize(Display *display) {
-    igCreateContext(nil);
+    display->context = igCreateContext(nil);
     imnodes_CreateContext();
     ImPlot_CreateContext();
 
-    ImGuiIO *io = igGetIO();
+    ImGuiIO *io = igGetIO_ContextPtr(display->context);
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    ui_setup_style();
+    ui_setup_style(display);
 
     ImGui_ImplGlfw_InitForOpenGL(display->handle, true);
-    ImGui_ImplOpenGL3_Init("#version 450");
+    ImGui_ImplOpenGL3_Init("#version 410");
 
     igClearIniSettings();
     igLoadIniSettingsFromDisk("data/setup.ini");

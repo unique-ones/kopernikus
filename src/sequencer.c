@@ -400,13 +400,13 @@ static void sequencer_render_timeline(Sequencer *sequencer) {
     renderer_end_batch(renderer);
     renderer_end_capture(renderer);
 
-    ImTextureID id = (ImTextureID) (u64) renderer->capture.texture_handle;
-    f32 width = (f32) renderer->capture.spec.width;
-    f32 height = (f32) renderer->capture.spec.height;
+    ImTextureRef texture_ref = { 0 };
+    texture_ref._TexID = (u64) renderer->capture.texture_handle;
 
-    igImage(id, (ImVec2){ width, height }, (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, (ImVec4){ 1, 1, 1, 1 },
-            (ImVec4){ 1, 0, 0, 0 });
+    f32 const width = (f32) renderer->capture.spec.width;
+    f32 const height = (f32) renderer->capture.spec.height;
 
+    igImage(texture_ref, (ImVec2){ width, height }, (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 });
     ui_window_end();
 }
 
