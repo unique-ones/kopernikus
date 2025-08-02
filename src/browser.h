@@ -25,7 +25,6 @@
 #define KOPERNIKUS_BROWSER_H
 
 #include <solaris/catalog.h>
-#include "solaris/globe.h"
 
 typedef struct ObjectEntry {
     /// The classification is used to decide which type is stored here.
@@ -51,9 +50,6 @@ typedef struct ObjectBrowser {
 
     /// Memory arena for all ObjectBrowser allocations
     MemoryArena arena;
-
-    /// GlobeTree for spatial acceleration
-    GlobeTree *globe_tree;
 
     /// Heat map for displaying all the objects
     struct {

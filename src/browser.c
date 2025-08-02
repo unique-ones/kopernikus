@@ -22,7 +22,6 @@
 // SOFTWARE.
 
 #include <solaris/arena.h>
-#include <solaris/globe.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -44,7 +43,6 @@
 void object_browser_make(ObjectBrowser *browser) {
     browser->catalog = catalog_acquire();
     browser->arena = memory_arena_identity(ALIGNMENT8);
-    browser->globe_tree = globe_tree_make_root(&browser->arena);
     browser->selected = (ObjectEntry){
         .classification = CLASSIFICATION_COUNT,
         .tree_index = -1,

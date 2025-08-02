@@ -32,7 +32,7 @@ file(GLOB CORE_SOURCE_LIST
         ${CMAKE_CURRENT_LIST_DIR}/ui/*.c
         ${CMAKE_CURRENT_LIST_DIR}/ui/*.h)
 
-add_library(libcore ${CORE_SOURCE_LIST} "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.h" "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.c")
-target_include_directories(libcore PUBLIC "${CMAKE_SOURCE_DIR}/src/extern/" "${CMAKE_SOURCE_DIR}/src/")
-target_link_libraries(libcore PUBLIC "solaris" "cimgui")
-target_compile_definitions(libcore PUBLIC CIMGUI_DEFINE_ENUMS_AND_STRUCTS)
+add_library(core ${CORE_SOURCE_LIST} "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.h" "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.c")
+target_include_directories(core PUBLIC "${CMAKE_SOURCE_DIR}/src/extern/" "${CMAKE_SOURCE_DIR}/src/")
+target_link_libraries(core PUBLIC "solaris" "cimgui")
+target_compile_definitions(core PUBLIC CIMGUI_DEFINE_ENUMS_AND_STRUCTS)
