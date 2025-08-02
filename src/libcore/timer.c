@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#include "timer.h"
 
-#include "types.h"
+/// Creates a new timer
+void timer_make(Timer *timer) {
+    timer->start = 0;
+    timer->end = 0;
+}
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+/// Starts the timer
+void timer_start(Timer *timer) {
+    timer->start = clock();
+    timer->end = timer->start;
+}
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+/// Ends the timer
+void timer_end(Timer *timer) {
+    timer->end = clock();
+}
 
-#endif// CORE_MATH_H
+/// Computes the elapsed milliseconds of the timer
+f64 timer_elapsed(Timer *timer) {
+    return ((f64) (timer->end - timer->start)) / CLOCKS_PER_SEC * 1000.0;
+}

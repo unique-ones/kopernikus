@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#ifndef KOPERNIKUS_SKYMAP_H
+#define KOPERNIKUS_SKYMAP_H
 
-#include "types.h"
+#include <libcore/gpu.h>
+#include <solaris/solaris.h>
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+typedef struct SkyMapInfo {
+    FrameBuffer *target;
+    Object *object;
+    Vector2f size;
+    f32 scale;
+} SkyMapInfo;
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+/// Generates a skymap
+void skymap_generate(MemoryArena const *arena, Renderer *renderer, SkyMapInfo const *info);
 
-#endif// CORE_MATH_H
+#endif// KOPERNIKUS_SKYMAP_H

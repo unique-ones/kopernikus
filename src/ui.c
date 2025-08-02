@@ -34,10 +34,9 @@
 #include <string.h>
 
 /// Macro for generating a ImU32 color
-/// #define IM_COL32_R_SHIFT    0
-#define UI_COLOR32(R, G, B, A)                                                                      \
-    (((ImU32) ((A) *255.0f) << 24) | ((ImU32) ((B) *255.0f) << 16) | ((ImU32) ((G) *255.0f) << 8) | \
-     ((ImU32) ((R) *255.0f) << 0))
+#define UI_COLOR32(R, G, B, A)                                                                         \
+    (((ImU32) ((A) * 255.0f) << 24) | ((ImU32) ((B) * 255.0f) << 16) | ((ImU32) ((G) * 255.0f) << 8) | \
+     ((ImU32) ((R) * 255.0f) << 0))
 
 /// Internal ID for the ImGui DockSpace
 static const char *UI_DOCK_SPACE_ID = "##KopernikusDockSpace";
@@ -66,74 +65,74 @@ static void ui_setup_style(Display const *display) {
     ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/fa-solid-900.ttf", font_size_icons, &icons, icons_ranges);
 
     ImGuiStyle *style = igGetStyle();
-    style->Colors[ImGuiCol_WindowBg] = (ImVec4){ 0.1f, 0.1f, 0.13f, 1.0f };
-    style->Colors[ImGuiCol_MenuBarBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_WindowBg] = (ImVec4) { 0.1f, 0.1f, 0.13f, 1.0f };
+    style->Colors[ImGuiCol_MenuBarBg] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Child
-    style->Colors[ImGuiCol_ChildBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_ChildBg] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Border
-    style->Colors[ImGuiCol_Border] = (ImVec4){ 0.44f, 0.37f, 0.61f, 0.29f };
-    style->Colors[ImGuiCol_BorderShadow] = (ImVec4){ 0.0f, 0.0f, 0.0f, 0.24f };
+    style->Colors[ImGuiCol_Border] = (ImVec4) { 0.44f, 0.37f, 0.61f, 0.29f };
+    style->Colors[ImGuiCol_BorderShadow] = (ImVec4) { 0.0f, 0.0f, 0.0f, 0.24f };
 
     // Text
-    style->Colors[ImGuiCol_Text] = (ImVec4){ 1.0f, 1.0f, 1.0f, 1.0f };
-    style->Colors[ImGuiCol_TextDisabled] = (ImVec4){ 0.5f, 0.5f, 0.5f, 1.0f };
-    style->Colors[ImGuiCol_TextSelectedBg] = (ImVec4){ 1.0f, 1.0f, 0.0f, 1.0f };
+    style->Colors[ImGuiCol_Text] = (ImVec4) { 1.0f, 1.0f, 1.0f, 1.0f };
+    style->Colors[ImGuiCol_TextDisabled] = (ImVec4) { 0.5f, 0.5f, 0.5f, 1.0f };
+    style->Colors[ImGuiCol_TextSelectedBg] = (ImVec4) { 1.0f, 1.0f, 0.0f, 1.0f };
 
     // Headers
-    style->Colors[ImGuiCol_Header] = (ImVec4){ 0.13f, 0.13f, 0.17f, 1.0f };
-    style->Colors[ImGuiCol_HeaderHovered] = (ImVec4){ 0.19f, 0.2f, 0.25f, 1.0f };
-    style->Colors[ImGuiCol_HeaderActive] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_Header] = (ImVec4) { 0.13f, 0.13f, 0.17f, 1.0f };
+    style->Colors[ImGuiCol_HeaderHovered] = (ImVec4) { 0.19f, 0.2f, 0.25f, 1.0f };
+    style->Colors[ImGuiCol_HeaderActive] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Buttons
-    style->Colors[ImGuiCol_Button] = (ImVec4){ 0.13f, 0.13f, 0.17f, 1.0f };
-    style->Colors[ImGuiCol_ButtonHovered] = (ImVec4){ 0.19f, 0.2f, 0.25f, 1.0f };
-    style->Colors[ImGuiCol_ButtonActive] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_CheckMark] = (ImVec4){ 0.74f, 0.58f, 0.98f, 1.0f };
+    style->Colors[ImGuiCol_Button] = (ImVec4) { 0.13f, 0.13f, 0.17f, 1.0f };
+    style->Colors[ImGuiCol_ButtonHovered] = (ImVec4) { 0.19f, 0.2f, 0.25f, 1.0f };
+    style->Colors[ImGuiCol_ButtonActive] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_CheckMark] = (ImVec4) { 0.74f, 0.58f, 0.98f, 1.0f };
 
     // Popups
-    style->Colors[ImGuiCol_PopupBg] = (ImVec4){ 0.1f, 0.1f, 0.13f, 0.92f };
+    style->Colors[ImGuiCol_PopupBg] = (ImVec4) { 0.1f, 0.1f, 0.13f, 0.92f };
 
     // Slider
-    style->Colors[ImGuiCol_SliderGrab] = (ImVec4){ 0.44f, 0.37f, 0.61f, 0.54f };
-    style->Colors[ImGuiCol_SliderGrabActive] = (ImVec4){ 0.74f, 0.58f, 0.98f, 0.54f };
+    style->Colors[ImGuiCol_SliderGrab] = (ImVec4) { 0.44f, 0.37f, 0.61f, 0.54f };
+    style->Colors[ImGuiCol_SliderGrabActive] = (ImVec4) { 0.74f, 0.58f, 0.98f, 0.54f };
 
     // Frame BG
-    style->Colors[ImGuiCol_FrameBg] = (ImVec4){ 0.13f, 0.13f, 0.17f, 1.0f };
-    style->Colors[ImGuiCol_FrameBgHovered] = (ImVec4){ 0.19f, 0.2f, 0.25f, 1.0f };
-    style->Colors[ImGuiCol_FrameBgActive] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_FrameBg] = (ImVec4) { 0.13f, 0.13f, 0.17f, 1.0f };
+    style->Colors[ImGuiCol_FrameBgHovered] = (ImVec4) { 0.19f, 0.2f, 0.25f, 1.0f };
+    style->Colors[ImGuiCol_FrameBgActive] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Tabs
-    style->Colors[ImGuiCol_Tab] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_TabHovered] = (ImVec4){ 0.24f, 0.24f, 0.32f, 1.0f };
-    style->Colors[ImGuiCol_TabSelected] = (ImVec4){ 0.2f, 0.22f, 0.27f, 1.0f };
-    style->Colors[ImGuiCol_TabDimmed] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_TabDimmedSelected] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_Tab] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TabHovered] = (ImVec4) { 0.24f, 0.24f, 0.32f, 1.0f };
+    style->Colors[ImGuiCol_TabSelected] = (ImVec4) { 0.2f, 0.22f, 0.27f, 1.0f };
+    style->Colors[ImGuiCol_TabDimmed] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TabDimmedSelected] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Title
-    style->Colors[ImGuiCol_TitleBg] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_TitleBgActive] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_TitleBgCollapsed] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TitleBg] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TitleBgActive] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_TitleBgCollapsed] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
 
     // Scrollbar
-    style->Colors[ImGuiCol_ScrollbarBg] = (ImVec4){ 0.1f, 0.1f, 0.13f, 1.0f };
-    style->Colors[ImGuiCol_ScrollbarGrab] = (ImVec4){ 0.16f, 0.16f, 0.21f, 1.0f };
-    style->Colors[ImGuiCol_ScrollbarGrabHovered] = (ImVec4){ 0.19f, 0.2f, 0.25f, 1.0f };
-    style->Colors[ImGuiCol_ScrollbarGrabActive] = (ImVec4){ 0.24f, 0.24f, 0.32f, 1.0f };
+    style->Colors[ImGuiCol_ScrollbarBg] = (ImVec4) { 0.1f, 0.1f, 0.13f, 1.0f };
+    style->Colors[ImGuiCol_ScrollbarGrab] = (ImVec4) { 0.16f, 0.16f, 0.21f, 1.0f };
+    style->Colors[ImGuiCol_ScrollbarGrabHovered] = (ImVec4) { 0.19f, 0.2f, 0.25f, 1.0f };
+    style->Colors[ImGuiCol_ScrollbarGrabActive] = (ImVec4) { 0.24f, 0.24f, 0.32f, 1.0f };
 
     // Separator
-    style->Colors[ImGuiCol_Separator] = (ImVec4){ 0.44f, 0.37f, 0.61f, 1.0f };
-    style->Colors[ImGuiCol_SeparatorHovered] = (ImVec4){ 0.74f, 0.58f, 0.98f, 1.0f };
-    style->Colors[ImGuiCol_SeparatorActive] = (ImVec4){ 0.84f, 0.58f, 1.0f, 1.0f };
+    style->Colors[ImGuiCol_Separator] = (ImVec4) { 0.44f, 0.37f, 0.61f, 1.0f };
+    style->Colors[ImGuiCol_SeparatorHovered] = (ImVec4) { 0.74f, 0.58f, 0.98f, 1.0f };
+    style->Colors[ImGuiCol_SeparatorActive] = (ImVec4) { 0.84f, 0.58f, 1.0f, 1.0f };
 
     // Resize Grip
-    style->Colors[ImGuiCol_ResizeGrip] = (ImVec4){ 0.44f, 0.37f, 0.61f, 0.29f };
-    style->Colors[ImGuiCol_ResizeGripHovered] = (ImVec4){ 0.74f, 0.58f, 0.98f, 0.29f };
-    style->Colors[ImGuiCol_ResizeGripActive] = (ImVec4){ 0.84f, 0.58f, 1.0f, 0.29f };
+    style->Colors[ImGuiCol_ResizeGrip] = (ImVec4) { 0.44f, 0.37f, 0.61f, 0.29f };
+    style->Colors[ImGuiCol_ResizeGripHovered] = (ImVec4) { 0.74f, 0.58f, 0.98f, 0.29f };
+    style->Colors[ImGuiCol_ResizeGripActive] = (ImVec4) { 0.84f, 0.58f, 1.0f, 0.29f };
 
     // Docking
-    style->Colors[ImGuiCol_DockingPreview] = (ImVec4){ 0.44f, 0.37f, 0.61f, 1.0f };
+    style->Colors[ImGuiCol_DockingPreview] = (ImVec4) { 0.44f, 0.37f, 0.61f, 1.0f };
     style->TabRounding = 4;
     style->ScrollbarRounding = 9;
     style->WindowRounding = 7;
@@ -166,7 +165,7 @@ void ui_initialize(Display *display) {
     ui_setup_style(display);
 
     ImGui_ImplGlfw_InitForOpenGL(display->handle, true);
-    ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplOpenGL3_Init("#version 410 core");
 
     igClearIniSettings();
     igLoadIniSettingsFromDisk("data/setup.ini");
@@ -197,7 +196,7 @@ void ui_begin(void) {
     igNewFrame();
 
     ImGuiViewport *viewport = igGetMainViewport();
-    igSetNextWindowPos(viewport->Pos, 0, (ImVec2){ 0.0f, 0.0f });
+    igSetNextWindowPos(viewport->Pos, 0, (ImVec2) { 0.0f, 0.0f });
     igSetNextWindowSize(viewport->Size, 0);
     igPushStyleVar_Float(ImGuiStyleVar_WindowRounding, 0.0f);
     igPushStyleVar_Float(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -211,12 +210,12 @@ void ui_begin(void) {
         windowFlags |= ImGuiWindowFlags_NoBackground;
     }
 
-    igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, (ImVec2){ 0.0f, 0.0f });
+    igPushStyleVar_Vec2(ImGuiStyleVar_WindowPadding, (ImVec2) { 0.0f, 0.0f });
 
     static bool dockSpaceOpen = true;
     igBegin(UI_DOCK_SPACE_ID, &dockSpaceOpen, windowFlags);
     igPopStyleVar(3);
-    igDockSpace(igGetID_Str(UI_DOCK_SPACE_ID), (ImVec2){ 0.0f, 0.0f }, dockSpaceFlags, nil);
+    igDockSpace(igGetID_Str(UI_DOCK_SPACE_ID), (ImVec2) { 0.0f, 0.0f }, dockSpaceFlags, nil);
 }
 
 /// Ends the current ui draw pass
@@ -302,7 +301,7 @@ void ui_note(const char *fmt, ...) {
 
 /// Draws a tooltip
 void ui_tooltip(const char *fmt, ...) {
-    igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
+    igSetNextWindowSize((ImVec2) { 250.0f, 0.0f }, ImGuiCond_Always);
     igBeginTooltip();
     va_list list;
     va_start(list, fmt);
@@ -316,7 +315,7 @@ void ui_tooltip(const char *fmt, ...) {
 /// Draws a tooltip whenever the last item is hovered
 void ui_tooltip_hovered(const char *fmt, ...) {
     if (ui_hovered()) {
-        igSetNextWindowSize((ImVec2){ 250.0f, 0.0f }, ImGuiCond_Always);
+        igSetNextWindowSize((ImVec2) { 250.0f, 0.0f }, ImGuiCond_Always);
         igBeginTooltip();
         va_list list;
         va_start(list, fmt);
@@ -343,7 +342,7 @@ static void ui_icon_end_of_line(const char *icon) {
 
 /// Draw a selectable item
 b8 ui_selectable(const char *label, const char *icon) {
-    b8 selected = igSelectable_Bool(label, false, ImGuiSelectableFlags_None, (ImVec2){ 0.0f, 0.0f });
+    b8 selected = igSelectable_Bool(label, false, ImGuiSelectableFlags_None, (ImVec2) { 0.0f, 0.0f });
     if (icon) {
         ui_icon_end_of_line(icon);
     }
@@ -362,7 +361,7 @@ void ui_item_width_end(void) {
 
 /// Draw a readonly text property
 void ui_property_text_readonly(const char *property, const char *text) {
-    igInputText(property, (char *) text, strlen(text), ImGuiInputTextFlags_ReadOnly, nil, nil);
+    igInputText(property, (char *) text, strlen(text) + 1, ImGuiInputTextFlags_ReadOnly, nil, nil);
 }
 
 /// Draw a number property
@@ -386,10 +385,12 @@ void ui_property_real_readonly(const char *property, f64 x, const char *fmt) {
 }
 
 /// Draw a searchbar
-b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder) {
-    ImVec2 available;
-    igGetContentRegionAvail(&available);
-    return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size, (ImVec2){ available.x, 0.0f },
+b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder, b8 full_width) {
+    ImVec2 available = { 0 };
+    if (full_width) {
+        igGetContentRegionAvail(&available);
+    }
+    return igInputTextEx(label, placeholder, buffer->data, (s32) buffer->size, (ImVec2) { available.x, 0.0f },
                          ImGuiInputTextFlags_None, nil, nil);
 }
 
@@ -397,6 +398,26 @@ b8 ui_searchbar(StringBuffer *buffer, const char *label, const char *placeholder
 b8 ui_combobox(const char *title, s32 *selected, const char **items, usize length) {
     return igCombo_Str_arr(title, selected, items, length, -1);
 }
+
+/// Draws a button
+b8 ui_button(const char *label, b8 full_width) {
+    ImVec2 available = { 0 };
+    if (full_width) {
+        igGetContentRegionAvail(&available);
+    }
+    return igButton(label, (ImVec2) { available.x, 0.0f });
+}
+
+/// Draws a light and colorful button
+b8 ui_button_light(const char *label, b8 full_width) {
+    igPushStyleColor_Vec4(ImGuiCol_Button, (ImVec4) { 0.84f, 0.45f, 0.49f, 1.0f });
+    igPushStyleColor_Vec4(ImGuiCol_ButtonHovered, (ImVec4) { 0.91f, 0.52f, 0.56f, 1.0f });
+    igPushStyleColor_Vec4(ImGuiCol_ButtonActive, (ImVec4) { 0.82f, 0.43f, 0.47f, 1.0f });
+    b8 result = ui_button(label, full_width);
+    igPopStyleColor(3);
+    return result;
+}
+
 
 /// Draws a tree node with an optional icon
 b8 ui_tree_node_begin(const char *label, const char *icon, b8 selected) {
@@ -520,4 +541,13 @@ b8 ui_hovered(void) {
 /// Keep the current line of the UI cursor
 void ui_keep_line(void) {
     igSameLine(0.0f, -1.0f);
+}
+
+/// Advances the draw cursor
+void ui_draw_cursor_advance(f32 x, f32 y) {
+    ImVec2 pos = { 0 };
+    igGetCursorPos(&pos);
+    pos.x += x;
+    pos.y += y;
+    igSetCursorPos(pos);
 }

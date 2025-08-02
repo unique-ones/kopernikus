@@ -21,25 +21,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <libascom/device.h>
 #include <libascom/http/client.h>
+#include <libascom/observing_conditions.h>
+#include <libascom/utils/cJSON.h>
 #include <libcore/display.h>
 #include <libcore/log.h>
 
 #include "browser.h"
+#include "gear.h"
 #include "sequencer.h"
+#include "settings.h"
 #include "ui.h"
 
-
 int main(void) {
+    http_client_init();
+
     Display display = { 0 };
     display_create(&display, "Kopernikus - Advanced Tracking Sequencer", 1600, 900);
     ui_initialize(&display);
 
+    Settings settings = { 0 };
+    settings_make(&settings);
+
     ObjectBrowser browser = { 0 };
-    object_browser_make(&browser);
+    object_browser_make(&browser, &settings);
 
     Sequencer sequencer = { 0 };
     sequencer_make(&sequencer, &browser);
+
+    Gear gear = { 0 };
+    gear_make(&gear, 1.0f);
 
     while (display_running(&display)) {
         ui_begin();
@@ -58,6 +70,11 @@ int main(void) {
                 }
                 if (ui_selectable("Properties\t", ICON_FA_BOOK)) {
                     browser.show_properties = true;
+                }
+                ui_separator();
+                ui_note("Devices");
+                if (ui_selectable("Properties\t", ICON_FA_BOOK)) {
+                    gear.show_properties = true;
                 }
                 ui_separator();
                 ui_note("Editor");
@@ -86,14 +103,20 @@ int main(void) {
 
         object_browser_render(&browser);
         sequencer_render(&sequencer);
+        gear_render(&gear);
 
         ui_end();
         display_update_frame(&display);
     }
 
+    gear_destroy(&gear);
     sequencer_destroy(&sequencer);
+    object_browser_destroy(&browser);
+    settings_destroy(&settings);
 
     ui_destroy();
     display_destroy(&display);
+
+    http_client_destroy();
     return 0;
 }

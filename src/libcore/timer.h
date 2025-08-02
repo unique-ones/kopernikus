@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#ifndef CORE_TIMER_H
+#define CORE_TIMER_H
+
+#include <time.h>
 
 #include "types.h"
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+typedef struct Timer {
+    clock_t start;
+    clock_t end;
+} Timer;
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+/// Creates a new timer
+/// @param timer The timer handle
+void timer_make(Timer *timer);
 
-#endif// CORE_MATH_H
+/// Starts the timer
+/// @param timer The timer handle
+void timer_start(Timer *timer);
+
+/// Ends the timer
+/// @param timer The timer handle
+void timer_end(Timer *timer);
+
+/// Computes the elapsed milliseconds of the timer
+/// @param timer The timer handle
+/// @return The elapsed milliseconds between start and end
+f64 timer_elapsed(Timer *timer);
+
+#endif// CORE_TIMER_H

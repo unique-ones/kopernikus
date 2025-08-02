@@ -472,7 +472,7 @@ b8 frame_buffer_invalidate(FrameBuffer *self) {
     glGenTextures(1, &self->texture_handle);
     glBindTexture(GL_TEXTURE_2D, self->texture_handle);
     glTexImage2D(GL_TEXTURE_2D, 0, self->spec.internal_format, self->spec.width, self->spec.height, 0,
-                 self->spec.pixel_format, self->spec.pixel_type, NULL);
+                 self->spec.pixel_format, self->spec.pixel_type, nil);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -586,7 +586,7 @@ void render_group_push(RenderGroup *self, Vertex const *vertices, Index const *i
 static void renderer_draw_indexed(VertexArray const *vertex_array, Shader const *shader, u32 const mode) {
     vertex_array_bind(vertex_array);
     shader_bind(shader);
-    glDrawElements(mode, (s32) vertex_array->index_buffer->count, GL_UNSIGNED_INT, NULL);
+    glDrawElements(mode, (s32) vertex_array->index_buffer->count, GL_UNSIGNED_INT, nil);
     vertex_array_unbind();
 }
 

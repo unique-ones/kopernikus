@@ -1,4 +1,6 @@
 //
+// MIT License
+//
 // Copyright (c) 2024 Elias Engelbert Plank
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,21 +21,51 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef CORE_MATH_H
-#define CORE_MATH_H
+#include <pthread.h>
+#include <stdlib.h>
+#include <time.h>
 
-#include "types.h"
+#include <libcore/arch/thread.h>
 
-/// Creates an identity matrix
-/// @param self The matrix handle
-void matrix4x4f_create_identity(Matrix4x4f *self);
+/// Creates a new thread with the specified runner
+Thread thread_create(ThreadRunner runner, void *arg) {
+    pthread_t thread;
+    pthread_create(&thread, nil, runner, arg);
+    return (Thread) thread;
+}
 
-/// Creates an orthogonal projection matrix
-/// @param self The matrix handle
-/// @param left The left coordinate of the orthogonal frustum
-/// @param right The right coordinate of the orthogonal frustum
-/// @param bottom The bottom coordinate of the orthogonal frustum
-/// @param top The top coordinate of the orthogonal frustum
-void matrix4x4f_create_orthogonal(Matrix4x4f *self, f32 left, f32 right, f32 bottom, f32 top);
+/// Sends the curent thread of execution to sleep for the
+/// specified time.
+void thread_sleep(u64 milliseconds) {
+    struct timespec ts = { 0 };
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+}
 
-#endif// CORE_MATH_H
+typedef struct Mutex {
+    pthread_mutex_t handle;
+} Mutex;
+
+/// Creates a new mutex
+Mutex *mutex_new(void) {
+    Mutex *self = (Mutex *) malloc(sizeof(Mutex));
+    pthread_mutex_init(&self->handle, nil);
+    return self;
+}
+
+/// Frees the mutex
+void mutex_free(Mutex *self) {
+    pthread_mutex_destroy(&self->handle);
+    free(self);
+}
+
+/// Exclusively locks the mutex
+void mutex_lock(Mutex *self) {
+    pthread_mutex_lock(&self->handle);
+}
+
+/// Unlocks the mutex
+void mutex_unlock(Mutex *self) {
+    pthread_mutex_unlock(&self->handle);
+}

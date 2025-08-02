@@ -21,29 +21,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <solaris/arena.h>
-
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <libcore/input.h>
-#include <libcore/log.h>
-
-#include "browser.h"
-#include "solaris/math.h"
-#include "solaris/object.h"
-#include "ui.h"
-
 #include <cimgui.h>
 #include <cimplot.h>
 
+#include <solaris/arena.h>
+#include <solaris/object.h>
+
+#include <libcore/input.h>
+
+#include "browser.h"
+#include "ui.h"
 
 /// Create a new ObjectBrowser
-void object_browser_make(ObjectBrowser *browser) {
+void object_browser_make(ObjectBrowser *browser, Settings *settings) {
     browser->catalog = catalog_acquire();
     browser->arena = memory_arena_identity(ALIGNMENT8);
-    browser->selected = (ObjectEntry){
+    browser->selected = (ObjectEntry) {
         .classification = CLASSIFICATION_COUNT,
         .tree_index = -1,
         .object = nil,
@@ -61,6 +58,8 @@ void object_browser_make(ObjectBrowser *browser) {
         browser->heatmap.right_ascensions[i] = object->position.right_ascension;
         browser->heatmap.declinations[i] = object->position.declination;
     }
+
+    browser->settings = settings;
 }
 
 /// Destroys the ObjectBrowser
@@ -69,7 +68,7 @@ void object_browser_destroy(ObjectBrowser *browser) {
 }
 
 /// Render the catalog map
-static void render_catalog_map(ObjectBrowser *browser, bool fill_region) {
+static void render_catalog_map(ObjectBrowser *browser, b8 fill_region) {
     ImVec2 region = { 0 };
     igGetContentRegionAvail(&region);
     if (!fill_region) {
@@ -102,7 +101,7 @@ static void object_browser_render_tree(ObjectBrowser *browser) {
 
     if (igCollapsingHeader_BoolPtr("Objects", nil, ImGuiTreeNodeFlags_DefaultOpen)) {
         StringBuffer buffer = { browser->search_buffer, sizeof browser->search_buffer };
-        ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...");
+        ui_searchbar(&buffer, "##ObjectBrowserSearch", ICON_FA_MAGNIFYING_GLASS " Search for object...", true);
 
         // Check how many bytes are typed into the search bar
         usize search_fill = strlen(buffer.data);
@@ -179,14 +178,36 @@ static void object_browser_render_tree(ObjectBrowser *browser) {
     ui_window_end();
 }
 
-static void object_browser_render_properties_planet(Planet *planet) {
+static void object_browser_render_properties_live_position(Horizontal *position) {
+    ui_note("Live Position (now)");
+    ui_property_real_readonly("Alt", position->altitude, "%f °");
+    ui_tooltip_hovered(
+            "Altitude (Alt) is the angular measurement in a spherical coordinate system, "
+            "representing the height of an object above the horizon. Measured in degrees, ranging from 0° at the "
+            "horizon to 90° directly overhead.");
+
+    ui_property_real_readonly("Az", position->azimuth, "%f °");
+    ui_tooltip_hovered(
+            "Azimuth (Az) is the angular measurement in a spherical coordinate system, "
+            "representing the  direction of an object from the observer's position. Measured clockwise from the "
+            "North in degrees, ranging from 0° to 360°.");
+}
+
+static void object_browser_render_properties_planet(ObjectBrowser *browser, Planet *planet) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
-        ui_note("Designation");
-        ui_property_text_readonly("Name", planet_string(planet->name));
+        Geographic observer = { 0 };
+        observer.latitude = browser->settings->location.latitude;
+        observer.longitude = browser->settings->location.longitude;
 
         Time now = time_now();
         Elements elements = planet_position_orbital(planet, &now);
         Equatorial position = planet_position_equatorial(planet, &now);
+        Horizontal position_horizontal = observe_geographic(&position, &observer, &now);
+
+        ui_note("Designation");
+        ui_property_text_readonly("Name", planet_string(planet->name));
+
+        object_browser_render_properties_live_position(&position_horizontal);
 
         ui_note("Observation Data (now)");
         ui_property_real_readonly("Ra", position.right_ascension, "%f °");
@@ -242,16 +263,23 @@ static void object_browser_render_properties_planet(Planet *planet) {
     }
 }
 
-static void object_browser_render_properties_object(Object *object) {
+static void object_browser_render_properties_object(ObjectBrowser *browser, Object *object) {
     if (ui_tree_node_begin(ICON_FA_BOOK " General", nil, false)) {
+        Geographic observer = { 0 };
+        observer.latitude = browser->settings->location.latitude;
+        observer.longitude = browser->settings->location.longitude;
+
+        Time now = time_now();
+        Equatorial position = object_position(object, &now);
+        Horizontal position_horizontal = observe_geographic(&position, &observer, &now);
+
         ui_note("Designation");
         ui_property_text_readonly("Catalog", catalog_string(object->designation.catalog));
         ui_property_number_readonly("Index", (s64) object->designation.index, nil);
         ui_property_text_readonly("Type", classification_string(object->classification));
         ui_property_text_readonly("Const", constellation_string(object->constellation));
 
-        Time now = time_now();
-        Equatorial position = object_position(object, &now);
+        object_browser_render_properties_live_position(&position_horizontal);
 
         ui_note("Observation Data (now)");
         ui_property_real_readonly("Ra", position.right_ascension, "%f °");
@@ -296,9 +324,9 @@ static void object_browser_render_properties(ObjectBrowser *browser) {
     }
 
     if (browser->selected.classification == CLASSIFICATION_PLANET) {
-        object_browser_render_properties_planet(browser->selected.planet);
+        object_browser_render_properties_planet(browser, browser->selected.planet);
     } else {
-        object_browser_render_properties_object(browser->selected.object);
+        object_browser_render_properties_object(browser, browser->selected.object);
     }
 
     ui_window_end();

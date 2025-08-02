@@ -36,4 +36,6 @@ void flogf(FILE *file, const char *message, ...) {
     va_start(list, message);
     vfprintf(file, message, list);
     va_end(list);
+
+    fflush(file);
 }

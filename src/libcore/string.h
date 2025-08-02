@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef KOPERNIKUS_UTILITY_STRING_H
-#define KOPERNIKUS_UTILITY_STRING_H
+#ifndef CORE_STRING_H
+#define CORE_STRING_H
 
 #include <solaris/arena.h>
 
@@ -87,6 +87,7 @@ String string_nil(void);
 /// Creates a new String instance
 /// @param arena The arena for the allocation
 /// @param data The string data
+/// @param length The length of the string
 /// @return String instance
 ///
 /// @note Strings are heap allocated, which is the reason
@@ -94,4 +95,14 @@ String string_nil(void);
 ///       strings see StringView
 String string_new(MemoryArena *arena, const char *data, ssize length);
 
-#endif// KOPERNIKUS_UTILITY_STRING_H
+/// Creates a new empty String instance
+/// @param arena The arena for the allocation
+/// @param length The length of the string
+/// @return String instance
+///
+/// @note Strings are heap allocated, which is the reason
+///       why an arena is necessary. For views to constant
+///       strings see StringView
+String string_new_empty(MemoryArena *arena, ssize length);
+
+#endif// CORE_STRING_H

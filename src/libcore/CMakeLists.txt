@@ -30,9 +30,21 @@ file(GLOB CORE_SOURCE_LIST
         ${CMAKE_CURRENT_LIST_DIR}/*.c
         ${CMAKE_CURRENT_LIST_DIR}/*.h
         ${CMAKE_CURRENT_LIST_DIR}/ui/*.c
-        ${CMAKE_CURRENT_LIST_DIR}/ui/*.h)
+        ${CMAKE_CURRENT_LIST_DIR}/ui/*.h
+        ${CMAKE_CURRENT_LIST_DIR}/arch/*.c
+        ${CMAKE_CURRENT_LIST_DIR}/arch/*.h
+        ${CMAKE_CURRENT_LIST_DIR}/arch/${TARGET_BUILD_PLATFORM}/*.c
+        ${CMAKE_CURRENT_LIST_DIR}/arch/${TARGET_BUILD_PLATFORM}/*.h
+)
+
 
 add_library(core ${CORE_SOURCE_LIST} "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.h" "${CMAKE_SOURCE_DIR}/src/extern/glad/glad.c")
 target_include_directories(core PUBLIC "${CMAKE_SOURCE_DIR}/src/extern/" "${CMAKE_SOURCE_DIR}/src/")
 target_link_libraries(core PUBLIC "solaris" "cimgui")
 target_compile_definitions(core PUBLIC CIMGUI_DEFINE_ENUMS_AND_STRUCTS)
+
+if (${TARGET_BUILD_PLATFORM} STREQUAL "win32")
+    target_compile_definitions(core PUBLIC CORE_PLATFORM_WIN32=1 _CRT_SECURE_NO_WARNINGS=1)
+elseif (${TARGET_BUILD_PLATFORM} STREQUAL "linux")
+    target_compile_definitions(core PUBLIC CORE_PLATFORM_LINUX=1)
+endif ()
